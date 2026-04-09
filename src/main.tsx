@@ -5,3 +5,4 @@ import "./index.css";
 const rootEl = document.getElementById("root")!;
 rootEl.innerHTML = '';  // Clear SEO critical HTML injected at build time
 createRoot(rootEl).render(<App />);
+
