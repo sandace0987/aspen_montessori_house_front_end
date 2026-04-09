@@ -36,4 +36,4 @@ export const SITE_URL = "https://aspenmontessori.in";
 export const SUMMER_CAMP_FORM_URL = "https://forms.google.com/your-summer-camp-form"; // TODO: Replace with actual URL
 
 /** Developer portfolio URL */
-export const DEVELOPER_URL = "https://www.sandeepbarik.com";
+export const DEVELOPER_URL = "sandeep1407barik@gmail.com";

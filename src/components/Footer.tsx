@@ -46,7 +46,7 @@ export default function Footer() {
           </p>
           <p className="text-muted-foreground text-xs mt-2">
             Created with ❤️ by{" "}
-            <a href={DEVELOPER_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+            <a href={`mailto:${DEVELOPER_URL}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
               skb
             </a>
           </p>
