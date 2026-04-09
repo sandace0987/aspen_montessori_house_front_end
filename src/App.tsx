@@ -8,6 +8,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { FEATURE_FLAGS } from "./lib/feature-flags.ts";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 
 // Lazy-load non-critical routes
 const ParentLogin = lazy(() => import("./pages/ParentLogin.tsx"));
@@ -40,6 +42,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <SpeedInsights />
+          <Analytics />
           <ScrollToTop />
           <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <Routes>

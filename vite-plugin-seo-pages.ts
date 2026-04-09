@@ -37,37 +37,37 @@ export function seoPages(routes: SeoRoute[]): Plugin {
           )
           // Meta description
           .replace(
-            /<meta name="description" content="[^"]*"/,
+            /<meta\s+name="description"\s+content="[^"]*"/s,
             `<meta name="description" content="${route.description}"`
           )
           // OG title
           .replace(
-            /<meta property="og:title" content="[^"]*"/,
+            /<meta\s+property="og:title"\s+content="[^"]*"/s,
             `<meta property="og:title" content="${route.title}"`
           )
           // OG description
           .replace(
-            /<meta property="og:description" content="[^"]*"/,
+            /<meta\s+property="og:description"\s+content="[^"]*"/s,
             `<meta property="og:description" content="${route.description}"`
           )
           // OG URL
           .replace(
-            /<meta property="og:url" content="[^"]*"/,
+            /<meta\s+property="og:url"\s+content="[^"]*"/s,
             `<meta property="og:url" content="https://aspenmontessori.in${route.path}"`
           )
           // Twitter title
           .replace(
-            /<meta name="twitter:title" content="[^"]*"/,
+            /<meta\s+name="twitter:title"\s+content="[^"]*"/s,
             `<meta name="twitter:title" content="${route.title}"`
           )
           // Twitter description
           .replace(
-            /<meta name="twitter:description" content="[^"]*"/,
+            /<meta\s+name="twitter:description"\s+content="[^"]*"/s,
             `<meta name="twitter:description" content="${route.description}"`
           )
           // Canonical
           .replace(
-            /<link rel="canonical" href="[^"]*"/,
+            /<link\s+rel="canonical"\s+href="[^"]*"/s,
             `<link rel="canonical" href="https://aspenmontessori.in${route.path}"`
           );
 
