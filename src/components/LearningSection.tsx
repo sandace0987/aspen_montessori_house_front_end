@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ShieldCheck, GraduationCap, Users, UserCheck, ChevronLeft, ChevronRight } from "lucide-react";
-import { fadeUp } from "@/lib/animations";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import teacherImg1 from "@/assets/teacher-child-carousel-1.jpg";
 import teacherImg2 from "@/assets/teacher-child-carousel-2.jpg";
 
@@ -51,32 +50,15 @@ export function TeacherCarousel({ className = "h-[400px] lg:h-[500px]" }: { clas
           decoding="async"
         />
       ))}
-      {/* Arrows */}
-      <button
-        onClick={prev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white/70 hover:bg-white/35 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-        aria-label="Previous image"
-      >
+      <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white/70 hover:bg-white/35 hover:text-white transition-all opacity-0 group-hover:opacity-100" aria-label="Previous image">
         <ChevronLeft size={20} strokeWidth={2.5} />
       </button>
-      <button
-        onClick={next}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white/70 hover:bg-white/35 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-        aria-label="Next image"
-      >
+      <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white/70 hover:bg-white/35 hover:text-white transition-all opacity-0 group-hover:opacity-100" aria-label="Next image">
         <ChevronRight size={20} strokeWidth={2.5} />
       </button>
-      {/* Dots */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {teacherImages.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all ${
-              i === current ? "bg-white scale-110" : "bg-white/50"
-            }`}
-            aria-label={`Show image ${i + 1}`}
-          />
+          <button key={i} onClick={() => setCurrent(i)} className={`w-2.5 h-2.5 rounded-full transition-all ${i === current ? "bg-white scale-110" : "bg-white/50"}`} aria-label={`Show image ${i + 1}`} />
         ))}
       </div>
     </div>
@@ -84,15 +66,18 @@ export function TeacherCarousel({ className = "h-[400px] lg:h-[500px]" }: { clas
 }
 
 export default function LearningSection() {
+  const leftRef = useScrollReveal<HTMLDivElement>();
+  const rightRef = useScrollReveal<HTMLDivElement>();
+
   return (
     <section className="py-20 md:py-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <motion.div {...fadeUp}>
+          <div ref={leftRef} className="reveal-fade-up">
             <TeacherCarousel />
-          </motion.div>
+          </div>
 
-          <motion.div {...fadeUp} className="space-y-6">
+          <div ref={rightRef} className="reveal-fade-up space-y-6">
             <h2 className="text-3xl md:text-4xl font-semibold leading-[1.1]">
               Learning Through Discovery Every Day
             </h2>
@@ -110,14 +95,11 @@ export default function LearningSection() {
               ))}
             </div>
             <div className="pt-4">
-              <Link
-                to="/about"
-                className="inline-flex items-center px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium tracking-wide hover:shadow-md transition-all text-sm"
-              >
+              <Link to="/about" className="inline-flex items-center px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium tracking-wide hover:shadow-md transition-all text-sm">
                 More About Us
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

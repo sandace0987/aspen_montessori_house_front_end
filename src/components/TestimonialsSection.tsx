@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 const testimonials = [
   {
@@ -16,36 +16,29 @@ const testimonials = [
   },
   {
     quote:
-      "Enrolling our daughter at Aspen was one of our best decisions. The independence and self-management she’s developed truly stand out, along with her neat, confident handwriting. She approaches new things with curiosity and a quiet confidence we didn’t teach her; Aspen did. Special thanks to Teacher Jyothi and Teacher Vaani, who are truly the pillars of the school.",
+      "Enrolling our daughter at Aspen was one of our best decisions. The independence and self-management she's developed truly stand out, along with her neat, confident handwriting. She approaches new things with curiosity and a quiet confidence we didn't teach her; Aspen did. Special thanks to Teacher Jyothi and Teacher Vaani, who are truly the pillars of the school.",
     parent: "Harika",
     child: "Mother of Ridhima, age 5",
   },
 ];
 
 export default function TestimonialsSection() {
+  const headerRef = useScrollReveal<HTMLDivElement>();
+  const gridRef = useScrollReveal<HTMLDivElement>({ threshold: 0.1 });
+
   return (
     <section className="py-20 md:py-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ type: "spring" as const, duration: 0.8 }}
-          className="text-center mb-16"
-        >
+        <div ref={headerRef} className="reveal-fade-up text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">What Parents Say</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Trusted by families across Hyderabad.</p>
-        </motion.div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div ref={gridRef} className="reveal-fade-up grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
-            <motion.div
+            <div
               key={t.parent}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ type: "spring" as const, duration: 0.8, delay: i * 0.1 }}
-              className="bg-card rounded-3xl p-8 shadow-card"
+              className={`bg-card rounded-3xl p-8 shadow-card reveal-delay-${i + 1}`}
             >
               <Quote className="w-8 h-8 text-secondary mb-4" />
               <p className="text-foreground/80 leading-relaxed mb-6 text-sm">"{t.quote}"</p>
@@ -53,7 +46,7 @@ export default function TestimonialsSection() {
                 <p className="font-semibold text-sm">{t.parent}</p>
                 <p className="text-muted-foreground text-xs">{t.child}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

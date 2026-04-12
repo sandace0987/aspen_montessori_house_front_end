@@ -82,15 +82,33 @@ export default function SummerCamp() {
           </motion.div>
 
           {/* Image gallery */}
-          <motion.div {...fadeUp} className="grid grid-cols-3 gap-3 mb-10">
-            <div className="rounded-2xl overflow-hidden h-44">
-              <img src={craftImg} alt="Arts and crafts" className="w-full h-full object-cover" loading="lazy" />
+          <motion.div {...fadeUp} className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+            <div className="col-span-2 md:col-span-1 rounded-2xl overflow-hidden h-52 sm:h-56 md:h-44">
+              <img
+                src={craftImg}
+                alt="Arts and crafts"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: "center 35%" }}
+                loading="lazy"
+              />
             </div>
-            <div className="rounded-2xl overflow-hidden h-44">
-              <img src={musicImg} alt="Music and dance" className="w-full h-full object-cover" loading="lazy" />
+            <div className="rounded-2xl overflow-hidden h-40 sm:h-44 md:h-44">
+              <img
+                src={musicImg}
+                alt="Music and dance"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: "center 40%" }}
+                loading="lazy"
+              />
             </div>
-            <div className="rounded-2xl overflow-hidden h-44">
-              <img src={scienceImg} alt="Science experiments" className="w-full h-full object-cover" loading="lazy" />
+            <div className="rounded-2xl overflow-hidden h-40 sm:h-44 md:h-44">
+              <img
+                src={scienceImg}
+                alt="Science experiments"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: "center 25%" }}
+                loading="lazy"
+              />
             </div>
           </motion.div>
 

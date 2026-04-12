@@ -4,8 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getGalleryImages } from "@/lib/gallery-utils";
+import { usePageMeta } from "@/hooks/use-page-meta";
 
 export default function Gallery() {
+  usePageMeta("Gallery – Aspen Montessori Hyderabad", "See photos of life at Aspen Montessori — classrooms, outdoor play, art activities, and happy children learning through Montessori methods.");
   const allImages = getGalleryImages();
 
   return (
@@ -28,7 +30,7 @@ export default function Gallery() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
           {allImages.map((img, i) => (
             <motion.div
               key={`${img.alt}-${i}`}
@@ -36,15 +38,13 @@ export default function Gallery() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
-              className="rounded-2xl overflow-hidden"
+              className="rounded-2xl overflow-hidden break-inside-avoid"
             >
               <img
                 src={img.src}
                 alt={img.alt}
-                className="w-full h-56 md:h-64 object-cover hover:scale-105 transition-transform duration-500"
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500"
                 loading="lazy"
-                width={400}
-                height={256}
               />
             </motion.div>
           ))}

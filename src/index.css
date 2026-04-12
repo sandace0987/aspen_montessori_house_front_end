@@ -152,3 +152,51 @@
 .animate-ken-burns {
   animation: ken-burns 20s ease-in-out infinite;
 }
+
+/* Scroll-reveal animations — pure CSS, triggered by data-revealed attribute */
+.reveal-fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal-fade-up[data-revealed="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-scale-in {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.reveal-scale-in[data-revealed="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays for children */
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.16s; }
+.reveal-delay-3 { transition-delay: 0.24s; }
+.reveal-delay-4 { transition-delay: 0.32s; }
+.reveal-delay-5 { transition-delay: 0.40s; }
+
+/* Hero entrance — plays once on load via CSS animation */
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-hero-enter {
+  animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-hero-enter-delay {
+  animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@keyframes hero-badge {
+  from { opacity: 0; letter-spacing: 0.3em; }
+  to { opacity: 1; letter-spacing: 0.2em; }
+}
+.animate-hero-badge {
+  animation: hero-badge 1.2s ease-out both;
+}

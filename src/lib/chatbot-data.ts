@@ -9,7 +9,7 @@ export const chatbotQA: ChatQA[] = [
   {
     question: "What age groups do you accept?",
     answer:
-      "We welcome children across four programs:\n• Toddlers — 1.5 to 2.5 years\n• Montessori 1 — 3 to 4 years\n• Montessori 2 — 4 to 5 years\n• Montessori 3 — 5 years and above",
+      "We welcome children across three programs:\n• Toddlers — 1.5 to 2.5 years\n• Pre-Primary — 3 to 5+ years\n• Daycare — 1.5 to 6 years",
   },
   {
     question: "What is the admission process?",
@@ -18,7 +18,7 @@ export const chatbotQA: ChatQA[] = [
   {
     question: "What are the school timings?",
     answer:
-      "Our school timings are:\n• Toddlers, Montessori 1 & 2 — 9:00 AM to 12:30 PM\n• Montessori 3 — 9:00 AM to 2:30 PM\n• Daycare — 9:00 AM to 5:30 PM",
+      "Our school timings are:\n• Toddlers — 9:00 AM to 12:30 PM\n• Pre-Primary — 9:00 AM to 12:30 PM\n• Daycare — 9:00 AM to 5:30 PM",
   },
   {
     question: "Do you provide transport?",

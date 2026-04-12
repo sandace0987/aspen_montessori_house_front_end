@@ -45,11 +45,11 @@ const stats = [
 ];
 
 const recentStudents = [
-  { name: "Aanya Sharma", program: "Montessori 3", status: "Active", fee: "Paid" },
-  { name: "Arjun Kumar", program: "Montessori 2", status: "Active", fee: "Pending" },
-  { name: "Saanvi Reddy", program: "Montessori 1", status: "Active", fee: "Paid" },
-  { name: "Vikram Patel", program: "Montessori 3", status: "Active", fee: "Paid" },
-  { name: "Diya Nair", program: "Montessori 2", status: "Trial", fee: "N/A" },
+  { name: "Aanya Sharma", program: "Pre-Primary", status: "Active", fee: "Paid" },
+  { name: "Arjun Kumar", program: "Pre-Primary", status: "Active", fee: "Pending" },
+  { name: "Saanvi Reddy", program: "Pre-Primary", status: "Active", fee: "Paid" },
+  { name: "Vikram Patel", program: "Pre-Primary", status: "Active", fee: "Paid" },
+  { name: "Diya Nair", program: "Pre-Primary", status: "Trial", fee: "N/A" },
 ];
 
 export default function AdminDashboard() {

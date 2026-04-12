@@ -6,9 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import toddlers from "@/assets/program-toddlers.jpg";
-import m1 from "@/assets/program-m1.jpg";
-import m2 from "@/assets/program-m2.jpg";
-import m3 from "@/assets/program-m3.jpg";
+import prePrimary from "@/assets/program-m1.jpg";
 import daycare from "@/assets/program-daycare.jpg";
 
 import { fadeUp } from "@/lib/animations";
@@ -23,36 +21,18 @@ const programs = [
     description: "Our Toddlers program introduces young children to a structured yet gentle learning environment. Through sensory play, music, movement, and guided exploration, children develop motor skills, early language, and social awareness while feeling safe and loved.",
     highlights: ["Sensory exploration stations", "Music and movement sessions", "Early language development", "Guided social play", "Parent orientation sessions"],
     bg: "bg-secondary/20",
+    objectPos: "center 30%",
   },
   {
-    title: "Montessori 1",
-    age: "3 – 4 years",
+    title: "Pre-Primary",
+    age: "3 – 5+ years",
     timing: "9:00 AM – 12:30 PM",
-    img: m1,
-    tagline: "Building foundations through hands-on learning",
-    description: "The Montessori 1 program immerses children in authentic Montessori materials and activities. Children work with practical life exercises, sensorial materials, and early maths and language tools — building concentration, independence, and a love for learning.",
-    highlights: ["Practical life exercises", "Montessori sensorial materials", "Pre-maths & pre-reading", "Art and creative expression", "Outdoor nature exploration"],
+    img: prePrimary,
+    tagline: "Building foundations through hands-on Montessori learning",
+    description: "Our Pre-Primary program immerses children in authentic Montessori materials and activities across all developmental stages. From practical life exercises and sensorial exploration to advanced reading, writing, mathematics, and cultural studies — children build concentration, independence, critical thinking, and a deep love for learning in a carefully prepared mixed-age environment.",
+    highlights: ["Practical life exercises", "Montessori sensorial materials", "Reading & writing fluency", "Mathematics & geometry", "Cultural studies & geography", "Science experiments", "Art and creative expression", "Outdoor nature exploration"],
     bg: "bg-primary/10",
-  },
-  {
-    title: "Montessori 2",
-    age: "4 – 5 years",
-    timing: "9:00 AM – 12:30 PM",
-    img: m2,
-    tagline: "Developing independence and critical thinking",
-    description: "Our Montessori 2 program deepens the Montessori experience with advanced practical life and sensorial activities, early writing, and mathematical thinking. Children build independence, problem-solving skills, and a strong sense of community.",
-    highlights: ["Advanced sensorial activities", "Early writing & reading readiness", "Mathematical concepts", "Cultural awareness", "Collaborative projects"],
-    bg: "bg-secondary/15",
-  },
-  {
-    title: "Montessori 3",
-    age: "5+ years",
-    timing: "9:00 AM – 2:30 PM",
-    img: m3,
-    tagline: "Preparing confident, independent learners",
-    description: "Our Montessori 3 program builds on strong foundations with advanced materials in mathematics, language, cultural studies, and science. Children develop critical thinking, reading fluency, and collaborative skills, emerging school-ready and self-assured.",
-    highlights: ["Advanced Montessori materials", "Reading & writing fluency", "Mathematics & geometry", "Science experiments", "Cultural studies & geography"],
-    bg: "bg-accent/10",
+    objectPos: "center 25%",
   },
   {
     title: "Daycare",
@@ -63,6 +43,7 @@ const programs = [
     description: "Our Daycare program wraps enriching learning activities around a full day of care. Children enjoy structured Montessori sessions alongside art, storytelling, outdoor play, rest time, and nutritious meals — all in a safe, joyful environment.",
     highlights: ["Full-day structured routine", "Nutritious meals & snacks", "Rest and quiet time", "Art, music & storytelling", "Indoor and outdoor play"],
     bg: "bg-primary/5",
+    objectPos: "center top",
   },
 ];
 
@@ -76,7 +57,7 @@ const enrichments = [
 ];
 
 export default function Programs() {
-  usePageMeta("Programs – Aspen Montessori Hyderabad", "Explore Toddlers, Montessori 1, Montessori 2, Montessori 3 & Daycare programs at Aspen Montessori for children aged 1.5 to 6 years.");
+  usePageMeta("Programs – Aspen Montessori Hyderabad", "Explore Toddlers, Pre-Primary & Daycare programs at Aspen Montessori for children aged 1.5 to 6 years.");
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -104,8 +85,8 @@ export default function Programs() {
               className={`${p.bg} rounded-3xl overflow-hidden`}
             >
               <div className={`grid grid-cols-1 lg:grid-cols-2 gap-0 ${i % 2 === 1 ? "lg:direction-rtl" : ""}`}>
-                <div className="h-64 lg:h-auto">
-                  <img src={p.img} alt={`${p.title} program — children aged ${p.age}`} className="w-full h-full object-cover" loading="lazy" width={600} height={400} />
+                <div className="h-72 lg:aspect-[4/3] lg:h-auto">
+                  <img src={p.img} alt={`${p.title} program — children aged ${p.age}`} className="w-full h-full object-cover" style={{ objectPosition: p.objectPos }} loading="lazy" width={600} height={400} />
                 </div>
                 <div className={`p-8 md:p-10 flex flex-col justify-center ${i % 2 === 1 ? "lg:order-first" : ""}`}>
                   <div className="flex flex-wrap items-center gap-3 mb-3">

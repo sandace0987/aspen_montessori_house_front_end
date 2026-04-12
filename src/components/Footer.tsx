@@ -17,11 +17,24 @@ export default function Footer() {
           <div className="flex flex-col items-center sm:items-start">
             <h4 className="font-semibold text-sm mb-4">Quick Links</h4>
             <nav className="space-y-2">
-              <Link to="/" className="block text-muted-foreground text-sm hover:text-primary transition-colors">Home</Link>
-              <Link to="/about" className="block text-muted-foreground text-sm hover:text-primary transition-colors">About Us</Link>
-              <Link to="/programs" className="block text-muted-foreground text-sm hover:text-primary transition-colors">Programs</Link>
-              <Link to="/gallery" className="block text-muted-foreground text-sm hover:text-primary transition-colors">Gallery</Link>
-              <Link to="/newsletter" className="block text-muted-foreground text-sm hover:text-primary transition-colors">Newsletter</Link>
+              <Link to="/" className="block text-muted-foreground text-sm hover:text-primary transition-colors">
+                Home
+              </Link>
+              <Link to="/about" className="block text-muted-foreground text-sm hover:text-primary transition-colors">
+                About Us
+              </Link>
+              <Link to="/programs" className="block text-muted-foreground text-sm hover:text-primary transition-colors">
+                Programs
+              </Link>
+              <Link to="/gallery" className="block text-muted-foreground text-sm hover:text-primary transition-colors">
+                Gallery
+              </Link>
+              <Link
+                to="/newsletter"
+                className="block text-muted-foreground text-sm hover:text-primary transition-colors"
+              >
+                Newsletter
+              </Link>
             </nav>
           </div>
 
@@ -37,16 +50,25 @@ export default function Footer() {
 
         <div className="border-t border-border mt-12 pt-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <Link to="/privacy" className="text-muted-foreground text-xs hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/privacy" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+              Privacy Policy
+            </Link>
             <span className="text-muted-foreground/40 text-xs">|</span>
-            <Link to="/terms" className="text-muted-foreground text-xs hover:text-primary transition-colors">Terms &amp; Conditions</Link>
+            <Link to="/terms" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+              Terms &amp; Conditions
+            </Link>
           </div>
           <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} {SCHOOL_NAME}. All rights reserved.
           </p>
           <p className="text-muted-foreground text-xs mt-2">
             Created with ❤️ by{" "}
-            <a href={`mailto:${DEVELOPER_URL}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+            <a
+              href={`mailto:${DEVELOPER_URL}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
               skb
             </a>
           </p>

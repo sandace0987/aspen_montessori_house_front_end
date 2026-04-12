@@ -1,4 +1,4 @@
-/** Shared scroll-in animation presets for framer-motion */
+/** Shared scroll-in animation presets — kept for backward compatibility on sub-pages */
 export const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },

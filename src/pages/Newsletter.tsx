@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, BookOpen, TreePine, Users, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { usePageMeta } from "@/hooks/use-page-meta";
 
 const currentNewsletter = {
   title: "The Aspen Leaf",
@@ -18,7 +19,7 @@ const currentNewsletter = {
       icon: BookOpen,
       title: "Language & Arithmetic in Action",
       content:
-        "Our Montessori classrooms are buzzing with learning as children explore sounds using Moveable Alphabets and build number sense through materials like Number Rods and Addition Strip Boards. These hands-on tools support deep understanding through self-paced discovery.",
+        "Our Montessori classrooms are buzzing with learning as children explore sounds using Moveable Alphabet and build number sense through materials like Number Rods and Addition Strip Board. These hands-on tools support deep understanding through self-paced discovery.",
     },
     {
       icon: Users,
@@ -42,6 +43,7 @@ const currentNewsletter = {
 };
 
 export default function Newsletter() {
+  usePageMeta("Newsletter – Aspen Montessori Hyderabad", "Stay updated with the latest news, events, and stories from Aspen Montessori Hyderabad.");
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

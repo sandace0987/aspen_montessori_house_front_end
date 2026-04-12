@@ -72,7 +72,7 @@ const milestones = [
   {
     year: "2016",
     event:
-      "Aspen Montessori launched its Daycare programme, equipped with best-in-class Montessori materials for an enriching early-learning experience.",
+      "Inception of Aspen Montessori — launched Pre-Primary and Daycare programmes, equipped with best-in-class IMTC and IIMS Montessori materials.",
     icon: Sprout,
   },
   {
@@ -101,7 +101,7 @@ const milestones = [
   {
     year: "2026",
     event:
-      "Proudly graduated 10+ batches of Montessori 3 students — confident, curious learners ready for their next chapter.",
+      "Proudly celebrated the graduation of 10 batches of confident, curious learners — ready to step into the next phase of their journey.",
     icon: Star,
   },
   {
@@ -164,8 +164,8 @@ export default function About() {
         name: "Vani Dhanashri",
         role: "Director",
         img: founder2Img,
-        degrees: ["IIMS", "IMTC"],
-        bio: "Co-founding member of Aspen, passionate Montessori educator known for her energy, empathy, and dedication. She believes strongly in holistic child development, creating an environment where children feel valued, independent, and curious. With a Montessori course featuring double specialisation, she brings both academic depth and practical expertise to early education. As a leader, she inspires her team with clarity and warmth, fostering a joyful, child-centred space. She also holds an MBA in Human Resources and Systems, enhancing her ability to lead with structure and care.",
+        degrees: ["IMTC", "IIMS"],
+        bio: "Founding member of Aspen Montessori House, an experienced Montessorian educator with over 20 years in teaching. She holds an MBA in HR and Systems, along with Montessori certifications from IMTC and IIMS, Bangalore.\n\nStarting her career as a lecturer, she found her true calling in early childhood education. She is deeply committed to holistic child development, fostering independence, curiosity, and a love for learning.\n\nAs a leader, she blends structure with empathy, creating a supportive, child-centred environment where both children and educators thrive.",
       },
     ];
     return Math.random() > 0.5 ? arr : [...arr].reverse();
@@ -195,8 +195,8 @@ export default function About() {
               A Place Where Children <span className="text-primary">Bloom</span>
             </h1>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-4">
-              Founded in <strong className="text-foreground">2016</strong>, Aspen Montessori is a leading
-              early-childhood education centre in Hyderabad. We follow the Montessori philosophy — hands-on, child-led
+              Founded in <strong className="text-foreground">2016</strong>, Aspen Montessori House is a leading
+              early-childhood education centre in Hyderabad, proudly led by an all-women team. We follow the Montessori philosophy — hands-on, child-led
               learning in a prepared environment — to help every child develop confidence, independence, and a lifelong
               love of discovery.
             </p>
@@ -270,8 +270,8 @@ export default function About() {
                   <p className="text-muted-foreground text-base leading-relaxed max-w-3xl mx-auto text-center mb-8">
                     The Montessori method is a child-centred educational approach based on scientific observation. It
                     emphasises hands-on learning, self-paced discovery, and respect for a child's natural psychological
-                    development. Children learn through purposeful activity in a carefully prepared environment guided
-                    by trained educators.
+                    development. Children learn through purposeful activity in a carefully prepared mixed-age group
+                    environment, guided by trained educators.
                   </p>
                   <h3 className="text-lg font-semibold text-center mb-6">The 5 Areas of Montessori Learning</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -449,7 +449,7 @@ export default function About() {
                 <img
                   src={f.img}
                   alt={f.name}
-                  className="w-28 h-28 rounded-full object-cover object-top mx-auto mb-5 border-4 border-primary/20"
+                  className="w-28 h-28 rounded-full object-cover mx-auto mb-5 border-4 border-primary/20"
                   loading="lazy"
                   width={112}
                   height={112}

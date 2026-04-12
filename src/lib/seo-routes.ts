@@ -16,16 +16,15 @@ export const seoRoutes: SeoRoute[] = [
     path: "/",
     title: "Aspen Montessori Hyderabad – Preschool & Daycare",
     description:
-      "Aspen Montessori is a leading Montessori preschool and daycare in Hyderabad offering Toddlers, Montessori 1, Montessori 2, Montessori 3 & Daycare for children aged 1.5–6 years.",
-    criticalHtml: `<h1>Aspen Montessori Hyderabad – Preschool &amp; Daycare</h1>
+      "Aspen Montessori House is a leading Montessori preschool and daycare in Hyderabad offering Toddlers, Pre-Primary & Daycare for children aged 1.5–6 years.",
+    criticalHtml: `<h1>Aspen Montessori House – Preschool &amp; Daycare in Hyderabad</h1>
       <p>A nurturing Montessori environment where children aged 1.5–6 years discover, explore, and grow.</p>
+      <p>"Free the child's potential, and you will transform him into the world." — Dr. Maria Montessori</p>
       <h2>Our Programs</h2>
       <ul>
-      <li><strong>Toddlers</strong> – Ages 1.5–2.5 years (9:00 AM – 12:30 PM)</li>
-        <li><strong>Montessori 1</strong> – Ages 3–4 years (9:00 AM – 12:30 PM)</li>
-        <li><strong>Montessori 2</strong> – Ages 4–5 years (9:00 AM – 12:30 PM)</li>
-        <li><strong>Montessori 3</strong> – Ages 5+ years (9:00 AM – 2:30 PM)</li>
-        <li><strong>Daycare</strong> – Ages 1.5–6 years</li>
+        <li><strong>Toddlers</strong> – Ages 1.5–2.5 years (9:00 AM – 12:30 PM)</li>
+        <li><strong>Pre-Primary</strong> – Ages 3–5+ years (9:00 AM – 12:30 PM)</li>
+        <li><strong>Daycare</strong> – Ages 1.5–6 years (9:00 AM – 5:30 PM)</li>
       </ul>
       <nav>
         <a href="/about">About Us</a>
@@ -40,9 +39,9 @@ export const seoRoutes: SeoRoute[] = [
     path: "/about",
     title: "About Us – Aspen Montessori Hyderabad",
     description:
-      "Learn about Aspen Montessori's mission, values, and journey as a leading Montessori preschool in Hyderabad.",
-    criticalHtml: `<h1>About Aspen Montessori</h1>
-      <p>Founded in 2016, Aspen Montessori is a leading early-childhood education centre in Hyderabad following the Montessori philosophy of hands-on, child-led learning.</p>
+      "Learn about Aspen Montessori House — proudly led by an all-women team. Our mission, values, and journey as a leading Montessori preschool in Hyderabad.",
+    criticalHtml: `<h1>About Aspen Montessori House</h1>
+      <p>Founded in 2016, Aspen Montessori House is a leading early-childhood education centre in Hyderabad, proudly led by an all-women team, following the Montessori philosophy of hands-on, child-led learning in a carefully prepared mixed-age group environment.</p>
       <h2>Our Mission</h2>
       <p>To provide a joyful, inclusive Montessori environment where every child is empowered to learn at their own pace and build the skills they need to flourish in life.</p>
       <h2>Our Vision</h2>
@@ -52,7 +51,7 @@ export const seoRoutes: SeoRoute[] = [
       <h2>Our Values</h2>
       <ul><li>Nurturing Care</li><li>Observation-Led</li><li>Curiosity First</li><li>Safe Environment</li><li>Excellence</li><li>Community</li></ul>
       <h2>Milestones</h2>
-      <p>2016: Founded with best-in-class Montessori materials · 2017: Dedicated transport fleet · 2018: Khel Aspen sports event · 2019–2020: Digital curriculum for COVID online classes · 2025: 200+ families served · 2026: 10+ batches graduated.</p>
+      <p>2016: Inception of Aspen Montessori — launched Pre-Primary and Daycare programmes · 2017: Dedicated transport fleet · 2018: Khel Aspen sports event · 2019–2020: Digital curriculum for COVID online classes · 2025: 200+ families served · 2026: Proudly celebrated the graduation of 10 batches of confident, curious learners.</p>
       <h2>Achievements &amp; Recognition</h2>
       <p>Recognised for excellence in Montessori education, innovative curriculum design, and meaningful community impact.</p>
       <h2>Our Teaching &amp; Staff</h2>
@@ -63,13 +62,11 @@ export const seoRoutes: SeoRoute[] = [
     path: "/programs",
     title: "Programs – Aspen Montessori Hyderabad",
     description:
-      "Explore Toddlers, Montessori 1, Montessori 2, Montessori 3 & Daycare programs at Aspen Montessori for children aged 1.5 to 6 years.",
+      "Explore Toddlers, Pre-Primary & Daycare programs at Aspen Montessori for children aged 1.5 to 6 years.",
     criticalHtml: `<h1>Our Programs</h1>
       <p>Each program follows authentic Montessori pedagogy tailored to your child's developmental stage.</p>
       <h2>Toddlers (1.5–2.5 years) — 9:00 AM – 12:30 PM</h2><p>Sensory exploration and early independence in a safe, nurturing environment.</p>
-      <h2>Montessori 1 (3–4 years) — 9:00 AM – 12:30 PM</h2><p>Building foundational skills through hands-on Montessori materials.</p>
-      <h2>Montessori 2 (4–5 years) — 9:00 AM – 12:30 PM</h2><p>Deepening literacy, arithmetic, and cultural studies.</p>
-      <h2>Montessori 3 (5+ years) — 9:00 AM – 2:30 PM</h2><p>Advanced preparation for primary school with reading, writing, and mathematics.</p>
+      <h2>Pre-Primary (3–5+ years) — 9:00 AM – 12:30 PM</h2><p>Building foundations through hands-on Montessori materials — from early exploration to school readiness in a carefully prepared mixed-age environment.</p>
       <h2>Daycare (1.5–6 years) — 9:00 AM – 5:30 PM</h2><p>Extended care blending Montessori activities with rest and play.</p>
       <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/gallery">Gallery</a></nav>`,
   },

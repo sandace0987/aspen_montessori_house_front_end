@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 
 // Lazy-load below-the-fold sections for faster FCP
 const LearningSection = lazy(() => import("@/components/LearningSection"));
+const MontessoriQuote = lazy(() => import("@/components/MontessoriQuote"));
 const TimelineSection = lazy(() => import("@/components/TimelineSection"));
 const ProgramsSection = lazy(() => import("@/components/ProgramsSection"));
 const GallerySection = lazy(() => import("@/components/GallerySection"));
@@ -23,6 +24,7 @@ const Index = () => {
       <Navbar />
       <div id="home"><HeroSection /></div>
       <Suspense fallback={<LazyFallback />}>
+        <MontessoriQuote />
         <div id="about"><LearningSection /></div>
         <div id="timeline"><TimelineSection /></div>
         <div id="programs"><ProgramsSection /></div>

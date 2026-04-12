@@ -147,7 +147,7 @@ export default function ParentLogin() {
               <div className="space-y-1">
                 <p className="font-semibold">Aanya Sharma</p>
                 <p className="text-sm text-muted-foreground">Age: 4 years</p>
-                <p className="text-sm text-muted-foreground">Program: Montessori 3</p>
+                <p className="text-sm text-muted-foreground">Program: Pre-Primary</p>
                 <p className="text-sm text-muted-foreground">Enrolled since: June 2024</p>
               </div>
             </div>
