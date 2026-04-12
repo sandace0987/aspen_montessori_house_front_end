@@ -98,8 +98,8 @@ export default function Navbar() {
                   key={link.label}
                   onClick={() => scrollTo(link.hash)}
                   className={`relative text-sm font-medium tracking-wide transition-colors whitespace-nowrap ${isActive
-                    ? "text-primary border-b-2 border-primary pb-0.5"
-                    : "text-foreground/70 hover:text-primary"
+                      ? "text-primary border-b-2 border-primary pb-0.5"
+                      : "text-foreground/70 hover:text-primary"
                     }`}
                 >
                   {link.label}
@@ -173,8 +173,8 @@ export default function Navbar() {
                     key={link.label}
                     onClick={() => scrollTo(link.hash)}
                     className={`relative block w-full text-left px-4 py-3 rounded-2xl transition-colors font-medium ${isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/80 hover:bg-muted"
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground/80 hover:bg-muted"
                       }`}
                   >
                     {link.label}
