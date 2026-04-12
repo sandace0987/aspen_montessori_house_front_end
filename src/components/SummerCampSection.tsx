@@ -21,7 +21,7 @@ export default function SummerCampSection() {
         <div ref={headerRef} className="reveal-fade-up text-center mb-8">
           <img src={summerCampIcon} alt="" className="w-16 h-16 mx-auto mb-3" width={512} height={512} loading="lazy" />
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-3">
-            <Sparkles size={14} /> New
+            <Sparkles size={14} /> Live Now!
           </span>
           <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-2">Summer Camp 2026</h2>
           <p className="text-muted-foreground flex items-center justify-center gap-2">

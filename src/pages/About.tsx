@@ -197,9 +197,9 @@ export default function About() {
             </h1>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-4">
               Founded in <strong className="text-foreground">2016</strong>, Aspen Montessori House is a leading
-              early-childhood education centre in Hyderabad, proudly led by an all-women team. We follow the Montessori philosophy — hands-on, child-led
-              learning in a prepared environment — to help every child develop confidence, independence, and a lifelong
-              love of discovery.
+              early-childhood education centre in Hyderabad, proudly led by an all-women team. We follow the Montessori
+              philosophy — hands-on, child-led learning in a prepared environment — to help every child develop
+              confidence, independence, and a lifelong love of discovery.
             </p>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-4">
               Our certified Montessori guides, thoughtfully designed classrooms, and strong parent partnerships create a
@@ -239,7 +239,11 @@ export default function About() {
         <motion.div {...fadeUp} className="mb-20">
           <div className="bg-card border border-border rounded-3xl p-8 md:p-10">
             <div className="flex justify-center mb-8">
-              <div className="inline-flex bg-muted rounded-full p-1" role="tablist" aria-label="Why Montessori or Why Aspen">
+              <div
+                className="inline-flex bg-muted rounded-full p-1"
+                role="tablist"
+                aria-label="Why Montessori or Why Aspen"
+              >
                 <button
                   role="tab"
                   aria-selected={whyTab === "montessori"}
@@ -450,7 +454,7 @@ export default function About() {
                 <img
                   src={f.img}
                   alt={f.name}
-                  className="w-28 h-28 rounded-full object-cover mx-auto mb-5 border-4 border-primary/20"
+                  className="w-32 h-32 rounded-full object-cover object-top mx-auto mb-5 border-4 border-primary/20"
                   loading="lazy"
                   width={112}
                   height={112}
