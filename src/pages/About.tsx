@@ -168,7 +168,8 @@ export default function About() {
         bio: "Founding member of Aspen Montessori House, an experienced Montessorian educator with over 20 years in teaching. She holds an MBA in HR and Systems, along with Montessori certifications from IMTC and IIMS, Bangalore.\n\nStarting her career as a lecturer, she found her true calling in early childhood education. She is deeply committed to holistic child development, fostering independence, curiosity, and a love for learning.\n\nAs a leader, she blends structure with empathy, creating a supportive, child-centred environment where both children and educators thrive.",
       },
     ];
-    return Math.random() > 0.5 ? arr : [...arr].reverse();
+    const seconds = new Date().getSeconds();
+    return seconds % 2 === 0 ? arr : [...arr].reverse();
   }, []);
 
   usePageMeta(
