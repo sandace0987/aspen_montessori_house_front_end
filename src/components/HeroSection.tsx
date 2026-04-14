@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Leaf } from "lucide-react";
 import heroPoster from "@/assets/hero-video-poster.jpg";
 import { ADMISSIONS_FORM_URL } from "@/lib/constants";
 
@@ -6,12 +6,20 @@ export default function HeroSection() {
   return (
     <section className="py-8 md:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* School Name */}
+        <div className="animate-hero-badge mb-8 md:mb-10 flex items-center justify-center">
+          <div className="group inline-flex items-center gap-2.5 cursor-default select-none">
+            <Leaf size={18} className="text-primary/60 group-hover:text-primary group-hover:rotate-12 transition-all duration-500" />
+            <span className="text-sm md:text-base font-semibold tracking-[0.2em] uppercase text-foreground/70 group-hover:text-foreground transition-colors duration-500">
+              Aspen Montessori House
+            </span>
+            <Leaf size={18} className="text-primary/60 group-hover:text-primary group-hover:-rotate-12 transition-all duration-500 scale-x-[-1]" />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
           {/* Left Card */}
           <div className="animate-hero-enter bg-primary rounded-3xl p-8 md:p-12 flex flex-col justify-center min-h-[360px]">
-            <span className="animate-hero-badge inline-flex px-3 py-1 rounded-full bg-primary-foreground/15 backdrop-blur-sm text-primary-foreground text-xs font-bold tracking-[0.15em] uppercase mb-3 drop-shadow-sm w-auto self-start">
-              Aspen Montessori House
-            </span>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground leading-tight mb-4">
               Where Learning Begins With Joy
             </h1>
@@ -42,7 +50,7 @@ export default function HeroSection() {
               <img
                 src={heroPoster}
                 alt="Children learning in a warm sunlit Montessori classroom"
-                className="w-full h-full object-cover scale-110"
+                className="w-full h-full object-cover object-[center_35%] md:object-[center_80%] scale-110"
                 loading="eager"
                 fetchPriority="high"
               />

@@ -18,7 +18,7 @@ export const seoRoutes: SeoRoute[] = [
     description:
       "Aspen Montessori House is a leading Montessori preschool and daycare in Hyderabad offering Toddlers, Pre-Primary & Daycare for children aged 1.5–6 years.",
     criticalHtml: `<h1>Aspen Montessori House – Preschool &amp; Daycare in Hyderabad</h1>
-      <p>A nurturing Montessori environment where children aged 1.5–6 years discover, explore, and grow.</p>
+      <p>Where Learning Begins With Joy — a nurturing Montessori environment where children aged 1.5–6 years discover, explore, and grow at their own pace.</p>
       <p>"Free the child's potential, and you will transform him into the world." — Dr. Maria Montessori</p>
       <h2>Our Programs</h2>
       <ul>
