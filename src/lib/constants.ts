@@ -37,3 +37,6 @@ export const SUMMER_CAMP_FORM_URL = "https://forms.google.com/your-summer-camp-f
 
 /** Developer portfolio URL */
 export const DEVELOPER_URL = "sandeep1407barik@gmail.com";
+
+/** Instagram profile URL */
+export const INSTAGRAM_URL = "https://www.instagram.com/aspen_montessori_house/";

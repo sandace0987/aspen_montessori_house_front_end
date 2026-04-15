@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
+import { Instagram } from "lucide-react";
 import aspenLogo from "@/assets/aspen-logo.png";
-import { PHONE_NUMBER, EMAIL, ADDRESS_SHORT, SCHOOL_NAME, DEVELOPER_URL } from "@/lib/constants";
+import { PHONE_NUMBER, EMAIL, ADDRESS_SHORT, SCHOOL_NAME, DEVELOPER_URL, INSTAGRAM_URL } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -12,6 +13,16 @@ export default function Footer() {
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mx-auto sm:mx-0">
               Empowering the absorbent minds through joyful, child-centered Montessori education in Hyderabad.
             </p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors mt-5"
+              aria-label="Follow us on Instagram"
+            >
+              <Instagram className="h-5 w-5" />
+              <span className="text-sm">Follow us</span>
+            </a>
           </div>
 
           <div className="flex flex-col items-center sm:items-start">
