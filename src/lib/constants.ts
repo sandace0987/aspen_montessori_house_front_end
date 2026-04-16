@@ -5,7 +5,7 @@
 export const SCHOOL_NAME = "Aspen Montessori House";
 
 /** Admissions Google Form URL */
-export const ADMISSIONS_FORM_URL = "https://forms.gle/t2iGsEnuwpxzHELA7"; // TODO: Replace with actual URL
+export const ADMISSIONS_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfcaQiQ0bQcrYsAimGdg6TJGbZKS5RMev5Jy8cmb58be8Z_Mg/viewform?usp=dialog"; // TODO: Replace with actual URL
 
 /** Primary contact phone number (display format) */
 export const PHONE_NUMBER = "+91-7032000862";
