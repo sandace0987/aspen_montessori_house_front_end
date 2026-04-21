@@ -10,9 +10,54 @@ Disallow: /parent
 
 User-agent: Twitterbot
 Allow: /
+Disallow: /admin
+Disallow: /parent
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /admin
+Disallow: /parent
+
+# AI / LLM crawlers — allowed for discovery and citation
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+Disallow: /parent
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /parent
 
 User-agent: *
 Allow: /
