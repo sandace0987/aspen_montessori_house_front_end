@@ -45,14 +45,15 @@ export default function HeroSection() {
           </div>
 
           {/* Right Cinematic Video */}
-          <div className="animate-hero-enter-delay rounded-3xl overflow-hidden min-h-[360px] relative">
+          <div className="animate-hero-enter-delay w-full rounded-3xl overflow-hidden min-h-[320px] sm:min-h-[400px] md:min-h-[480px] lg:min-h-[360px] relative">
             <div className="absolute inset-0 animate-ken-burns">
               <img
                 src={heroPoster}
-                alt="Children learning in a warm sunlit Montessori classroom"
-                className="w-full h-full object-cover object-[center_35%] md:object-[center_80%] scale-110"
+                alt="Young Montessori student building a Pink Tower in a sunlit classroom"
+                className="w-full h-full object-cover object-[78%_30%] sm:object-[72%_28%] md:object-[68%_30%] lg:object-[65%_35%] scale-105"
                 loading="eager"
                 fetchPriority="high"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
             </div>
             {/* Cinematic overlay */}
