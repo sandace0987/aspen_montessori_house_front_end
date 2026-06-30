@@ -40,3 +40,19 @@ export const DEVELOPER_URL = "sandeep1407barik@gmail.com";
 
 /** Instagram profile URL */
 export const INSTAGRAM_URL = "https://www.instagram.com/aspen_montessori_house/";
+
+/**
+ * Backend API Parent Link (Base URL)
+ * Reads dynamically from environment variables, falls back to development URL.
+ */
+export const API_PARENT_LINK =
+  import.meta.env.VITE_API_PARENT_LINK ||
+  "https://aspenmontessorihousebackend-development.up.railway.app";
+
+/**
+ * Supabase client configuration parameters.
+ */
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+

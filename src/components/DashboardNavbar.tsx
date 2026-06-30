@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Home, LogOut, Sun, Moon } from "lucide-react";
+import { Home, LogOut, Sun, Moon, Shield } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/context/AuthContext";
 import aspenLogo from "@/assets/aspen-logo.png";
 
 interface DashboardNavbarProps {
@@ -9,10 +10,13 @@ interface DashboardNavbarProps {
 
 export default function DashboardNavbar({ showLogout = true }: DashboardNavbarProps) {
   const { theme, toggleTheme } = useTheme();
+  const { logout, roles } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    const isCurrentlyAdmin = window.location.pathname.startsWith("/admin");
+    await logout();
+    navigate(isCurrentlyAdmin ? "/admin" : "/parent");
   };
 
   return (
@@ -24,6 +28,15 @@ export default function DashboardNavbar({ showLogout = true }: DashboardNavbarPr
           </Link>
 
           <div className="flex items-center gap-2">
+            {roles.includes("admin") && (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Shield size={16} />
+                <span className="hidden sm:inline">Admin Portal</span>
+              </Link>
+            )}
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-foreground/70 hover:text-primary hover:bg-muted transition-colors"

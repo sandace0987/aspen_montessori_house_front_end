@@ -20,8 +20,8 @@ export default function SummerCampSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={headerRef} className="reveal-fade-up text-center mb-8">
           <img src={summerCampIcon} alt="" className="w-16 h-16 mx-auto mb-3" width={512} height={512} loading="lazy" />
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-3">
-            <Sparkles size={14} /> Live Now!
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-3">
+            <Sparkles size={14} className="text-muted-foreground" /> Wrapped Up for the Season!
           </span>
           <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-2">Summer Camp 2026</h2>
           <p className="text-muted-foreground flex items-center justify-center gap-2">
@@ -32,13 +32,13 @@ export default function SummerCampSection() {
         <div ref={contentRef} className="reveal-fade-up grid md:grid-cols-2 gap-6 items-center">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 rounded-2xl overflow-hidden h-48 hover:scale-[1.02] transition-transform duration-300">
-              <img src={craftImg} alt="Children doing arts and crafts" className="w-full h-full object-cover" loading="lazy" />
+              <img src={craftImg} alt="Children doing arts and crafts" className="w-full h-full object-cover" style={{ objectPosition: "center 20%" }} loading="lazy" />
             </div>
             <div className="rounded-2xl overflow-hidden h-36 hover:scale-[1.02] transition-transform duration-300">
-              <img src={musicImg} alt="Children playing music outdoors" className="w-full h-full object-cover" loading="lazy" />
+              <img src={musicImg} alt="Children playing music outdoors" className="w-full h-full object-cover" style={{ objectPosition: "center 25%" }} loading="lazy" />
             </div>
             <div className="rounded-2xl overflow-hidden h-36 hover:scale-[1.02] transition-transform duration-300">
-              <img src={scienceImg} alt="Children doing science experiments" className="w-full h-full object-cover" style={{ objectPosition: "center 25%" }} loading="lazy" />
+              <img src={scienceImg} alt="Children doing science experiments" className="w-full h-full object-cover" style={{ objectPosition: "center 20%" }} loading="lazy" />
             </div>
           </div>
 

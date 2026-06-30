@@ -11,7 +11,7 @@ const baseNavLinks = [
   { label: "About Us", hash: "#about" },
   { label: "Programs", hash: "#programs" },
   ...(FEATURE_FLAGS.summerCampEnabled
-    ? [{ label: "Summer Camp", hash: "#summer-camp", isNew: true }]
+    ? [{ label: "Summer Camp", hash: "#summer-camp" }]
     : []),
   { label: "Gallery", hash: "#gallery" },
   { label: "Admissions", hash: "#admissions" },
