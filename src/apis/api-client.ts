@@ -93,6 +93,22 @@ export interface StudentResponse {
   updated_at: string;
 }
 
+export interface StudentTransitionRequest {
+  new_class_name: string;
+  new_academic_year: string;
+}
+
+export interface BulkTransitionRequest {
+  student_ids: number[];
+  new_class_name: string;
+  new_academic_year: string;
+}
+
+export interface BulkGraduateRequest {
+  student_ids: number[];
+}
+
+
 export interface FeePlanCreate {
   class_name: string;
   program_type: string;
@@ -240,6 +256,9 @@ export interface PaymentResponse {
   student_id: number;
   fee_due_id: number;
   amount_paid: string;
+  gateway_charges: string;
+  gateway_charges_gst: string;
+  total_amount_paid: string;
   payment_mode: "cash" | "upi" | "online_gateway" | "bank_transfer";
   payment_gateway: string | null;
   gateway_order_id: string | null;
@@ -591,6 +610,31 @@ export class APIClient {
   public async createCustomDue(req: FeeDueCustomCreate): Promise<FeeDueResponse> {
     return this.request<FeeDueResponse>("POST", "/api/v1/admin/fee-dues/custom", req);
   }
+
+  public async getAdminPayments(): Promise<PaymentResponse[]> {
+    return this.request<PaymentResponse[]>("GET", "/api/v1/admin/payments");
+  }
+
+  // ==========================================
+  // STUDENT TRANSITION & GRADUATION APIs
+  // ==========================================
+
+  public async transitionStudent(id: number, data: StudentTransitionRequest): Promise<StudentResponse> {
+    return this.request<StudentResponse>("PATCH", `/api/v1/admin/students/${id}/transition`, data);
+  }
+
+  public async bulkTransitionStudents(data: BulkTransitionRequest): Promise<StudentResponse[]> {
+    return this.request<StudentResponse[]>("POST", "/api/v1/admin/students/bulk-transition", data);
+  }
+
+  public async graduateStudent(id: number): Promise<StudentResponse> {
+    return this.request<StudentResponse>("PATCH", `/api/v1/admin/students/${id}/graduate`);
+  }
+
+  public async bulkGraduateStudents(data: BulkGraduateRequest): Promise<StudentResponse[]> {
+    return this.request<StudentResponse[]>("POST", "/api/v1/admin/students/bulk-graduate", data);
+  }
 }
 
 export const api = new APIClient();
+

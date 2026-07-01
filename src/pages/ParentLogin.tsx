@@ -19,7 +19,8 @@ import {
   ChevronRight,
   ShieldCheck,
   TrendingDown,
-  Lock
+  Lock,
+  X
 } from "lucide-react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Footer from "@/components/Footer";
@@ -87,6 +88,7 @@ export default function ParentLogin() {
 
   // Razorpay payment flow states
   const [isPaying, setIsPaying] = useState<number | null>(null);
+  const [confirmingPaymentDue, setConfirmingPaymentDue] = useState<FeeDueResponse | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<PaymentResponse | null>(null);
   const [showFutureInstallments, setShowFutureInstallments] = useState(false);
 
@@ -352,7 +354,11 @@ export default function ParentLogin() {
     });
   };
 
-  const handlePayFee = async (due: FeeDueResponse) => {
+  const handlePayFee = (due: FeeDueResponse) => {
+    setConfirmingPaymentDue(due);
+  };
+
+  const executePaymentFlow = async (due: FeeDueResponse) => {
     setIsPaying(due.id);
     try {
       const balanceVal = parseFloat(due.balance);
@@ -421,6 +427,13 @@ export default function ParentLogin() {
     const invoiceWindow = window.open("", "_blank");
     if (!invoiceWindow) return;
 
+    const baseAmount = parseFloat(payment.amount_paid);
+    const gatewayCharges = parseFloat(payment.gateway_charges || "0.00");
+    const gatewayChargesGst = parseFloat(payment.gateway_charges_gst || "0.00");
+    const totalPaid = parseFloat(payment.total_amount_paid || payment.amount_paid);
+
+    const hasCharges = gatewayCharges > 0;
+
     invoiceWindow.document.write(`
       <html>
         <head>
@@ -459,7 +472,7 @@ export default function ParentLogin() {
               <strong style="display:block; margin-bottom:8px; color:#475569;">Transaction Details</strong>
               <strong>Receipt No:</strong> AMH-REC-${payment.id}<br/>
               <strong>Payment ID:</strong> ${payment.gateway_payment_id || "Desk manual"}<br/>
-              <strong>Date:</strong> ${new Date(payment.paid_at).toLocaleString()}<br/>
+              <strong>Date:</strong> ${new Date(payment.paid_at || payment.created_at).toLocaleString()}<br/>
               <strong>Payment Mode:</strong> ${payment.payment_mode.replace("_", " ")}
             </div>
           </div>
@@ -469,17 +482,27 @@ export default function ParentLogin() {
               <thead>
                 <tr>
                   <th>Description</th>
-                  <th style="text-align: right;">Amount Paid</th>
+                  <th style="text-align: right;">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>Montessori Fee Installment Clearance</td>
-                  <td style="text-align: right; font-weight: 600;">₹${parseFloat(payment.amount_paid).toLocaleString("en-IN")}</td>
+                  <td style="text-align: right; font-weight: 600;">₹${baseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                 </tr>
+                ${hasCharges ? `
+                <tr>
+                  <td>Online Gateway Convenience Charge (2%)</td>
+                  <td style="text-align: right; font-weight: 600;">₹${gatewayCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td>GST on Gateway Charge (18%)</td>
+                  <td style="text-align: right; font-weight: 600;">₹${gatewayChargesGst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                </tr>
+                ` : ""}
               </tbody>
             </table>
-            <div class="total">Total Received: ₹${parseFloat(payment.amount_paid).toLocaleString("en-IN")}</div>
+            <div class="total">Total Received: ₹${totalPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="footer">
             Aspen Montessori House &copy; 2026. Lanco Hills Private Rd, Manikonda, Hyderabad.<br/>
@@ -784,13 +807,111 @@ export default function ParentLogin() {
               </div>
             </motion.div>
           )}
+
+          {confirmingPaymentDue && (() => {
+            const balanceVal = parseFloat(confirmingPaymentDue.balance);
+            const gatewayCharges = balanceVal * 0.02;
+            const gatewayChargesGst = gatewayCharges * 0.18;
+            const totalAmount = balanceVal + gatewayCharges + gatewayChargesGst;
+
+            return (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.95, y: 15 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.95, y: 15 }}
+                  className="bg-card border border-border rounded-3xl p-6 w-full max-w-md shadow-2xl relative space-y-5 text-foreground"
+                >
+                  <div className="absolute top-4 right-4">
+                    <button
+                      onClick={() => setConfirmingPaymentDue(null)}
+                      className="p-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <CreditCard className="text-primary" size={20} /> Online Payment Confirmation
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Review payment convenience fees for processing {confirmingPaymentDue.due_title}.
+                    </p>
+                  </div>
+
+                  {/* Calculations Breakdown */}
+                  <div className="space-y-2 border-y border-border py-4 text-xs">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Term Installment Fee:</span>
+                      <span className="font-semibold text-foreground">₹{balanceVal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Online Gateway Charge (2%):</span>
+                      <span className="font-semibold text-foreground">₹{gatewayCharges.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>GST on Gateway Charge (18%):</span>
+                      <span className="font-semibold text-foreground">₹{gatewayChargesGst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-sm text-primary pt-2 border-t border-dashed border-border mt-2">
+                      <span>Total Amount to Pay:</span>
+                      <span>₹{totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+
+                  {/* Refined Warning Text */}
+                  <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
+                    <AlertCircle className="shrink-0 mt-0.5" size={16} />
+                    <p className="leading-relaxed text-[11px]">
+                      An online convenience charge applies to gateway payments. If you prefer to pay via UPI/Cash to avoid these online gateway fees, you can do so directly at the school desk.
+                    </p>
+                  </div>
+
+                  {/* Action controls */}
+                  <div className="flex items-center gap-3 pt-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingPaymentDue(null)}
+                      className="px-4 py-2 border border-border text-muted-foreground rounded-full text-xs font-semibold hover:bg-muted transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isPaying === confirmingPaymentDue.id}
+                      onClick={() => executePaymentFlow(confirmingPaymentDue)}
+                      className="px-5 py-2 bg-primary text-primary-foreground hover:shadow-md rounded-full text-xs font-semibold transition-all flex items-center gap-1.5"
+                    >
+                      {isPaying === confirmingPaymentDue.id ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          <span>Interfacing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard size={14} />
+                          <span>Confirm & Pay ₹{totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            );
+          })()}
         </AnimatePresence>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           {/* Linked Student profiles */}
           <div className="lg:col-span-2 space-y-6">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <User size={18} className="text-primary" /> Active Student Profiles
+              <User size={18} className="text-primary" /> Student Profiles
             </h2>
 
             {dataLoading ? (
@@ -805,35 +926,51 @@ export default function ParentLogin() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {students.map((student) => (
-                  <motion.div
-                    key={student.id}
-                    {...fadeUp}
-                    className="bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                        {student.student_name[0]}
-                      </div>
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate" title={student.student_name}>{student.student_name}</p>
-                        <p className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full inline-block font-mono">
-                          Adm: {student.admission_number}
-                        </p>
-                        <div className="space-y-1 pt-2 border-t border-border/80 mt-2 text-xs text-muted-foreground">
-                          <p className="flex items-center gap-1.5"><Calendar size={12} /> Born: {student.date_of_birth}</p>
-                          <p className="flex items-center gap-1.5"><BookOpen size={12} /> Class: {student.class_name}</p>
-                          {student.discount_value && parseFloat(student.discount_value as string) > 0 && (
-                            <p className="flex items-center gap-1.5 text-emerald-600 font-medium">
-                              <TrendingDown size={12} /> Discount: {student.discount_value} {student.discount_type === "percentage" ? "%" : "INR"}
+                {students.map((student) => {
+                  const isGraduated = student.is_active === false;
+                  return (
+                    <motion.div
+                      key={student.id}
+                      {...fadeUp}
+                      className={`bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
+                        isGraduated ? "opacity-75 grayscale-[20%]" : ""
+                      }`}
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+                      <div className="flex items-start gap-4">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold ${
+                          isGraduated ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                        }`}>
+                          {student.student_name[0]}
+                        </div>
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-foreground truncate max-w-[130px] sm:max-w-none" title={student.student_name}>
+                              {student.student_name}
                             </p>
-                          )}
+                            {isGraduated && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+                                Graduated
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full inline-block font-mono">
+                            Adm: {student.admission_number}
+                          </p>
+                          <div className="space-y-1 pt-2 border-t border-border/80 mt-2 text-xs text-muted-foreground">
+                            <p className="flex items-center gap-1.5"><Calendar size={12} /> Born: {student.date_of_birth}</p>
+                            <p className="flex items-center gap-1.5"><BookOpen size={12} /> Class: {student.class_name}</p>
+                            {student.discount_value && parseFloat(student.discount_value as string) > 0 && (
+                              <p className="flex items-center gap-1.5 text-emerald-600 font-medium">
+                                <TrendingDown size={12} /> Discount: {student.discount_value} {student.discount_type === "percentage" ? "%" : "INR"}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
 
@@ -1022,9 +1159,12 @@ export default function ParentLogin() {
                         </div>
                       </div>
                       {due.remarks && (
-                        <div className="mt-4 p-2.5 rounded-2xl bg-muted/65 border border-border/40 text-[11px] leading-relaxed text-muted-foreground flex flex-col gap-0.5">
-                          <span className="font-semibold text-foreground text-[10px] uppercase tracking-wider text-primary/80">Admin Note</span>
-                          <span>{due.remarks}</span>
+                        <div className="my-4 p-3 bg-muted rounded-2xl flex items-start gap-2.5 text-xs text-muted-foreground">
+                          <AlertCircle className="shrink-0 text-primary mt-0.5" size={14} />
+                          <div>
+                            <span className="font-semibold text-[9px] uppercase tracking-wider text-primary block mb-0.5">Admin Note</span>
+                            <p className="text-[11px] leading-relaxed text-muted-foreground">{due.remarks}</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1103,7 +1243,9 @@ export default function ParentLogin() {
                     <th className="pb-3 font-semibold">Receipt</th>
                     <th className="pb-3 font-semibold">Student</th>
                     <th className="pb-3 font-semibold">Date</th>
-                    <th className="pb-3 font-semibold">Amount</th>
+                    <th className="pb-3 font-semibold">Fee Amount</th>
+                    <th className="pb-3 font-semibold">Charges</th>
+                    <th className="pb-3 font-semibold">Total Paid</th>
                     <th className="pb-3 font-semibold">Payment Mode</th>
                     <th className="pb-3 font-semibold">Status</th>
                     <th className="pb-3 font-semibold text-right">Actions</th>
@@ -1113,6 +1255,9 @@ export default function ParentLogin() {
                   {payments.map((p) => {
                     const studentName = students.find((s) => s.id === p.student_id)?.student_name || "Student";
                     const isSuccess = p.status === "success";
+                    const baseAmt = parseFloat(p.amount_paid);
+                    const chargesAmt = parseFloat(p.gateway_charges || "0.00") + parseFloat(p.gateway_charges_gst || "0.00");
+                    const totalAmt = parseFloat(p.total_amount_paid || p.amount_paid);
 
                     return (
                       <tr key={p.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
@@ -1121,7 +1266,11 @@ export default function ParentLogin() {
                         <td className="py-4 text-muted-foreground">
                           {new Date(p.paid_at || p.created_at).toLocaleDateString()}
                         </td>
-                        <td className="py-4 font-semibold text-foreground">₹{parseFloat(p.amount_paid).toLocaleString("en-IN")}</td>
+                        <td className="py-4 font-medium text-foreground">₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                        <td className="py-4 text-muted-foreground">
+                          {chargesAmt > 0 ? `₹${chargesAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—"}
+                        </td>
+                        <td className="py-4 font-semibold text-foreground">₹{totalAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                         <td className="py-4 text-muted-foreground">
                           <span className="capitalize">{p.payment_mode.replace("_", " ")}</span>
                         </td>

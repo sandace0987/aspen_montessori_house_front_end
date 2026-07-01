@@ -43,7 +43,8 @@ import {
   ToggleRight,
   Mail,
   Tag,
-  PlusCircle
+  PlusCircle,
+  ArrowRightLeft
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/context/AuthContext";
@@ -56,14 +57,15 @@ import {
   FeeAccountResponse,
   FeeDueResponse,
   FeeRuleResponse,
-  FeeRuleCreate
+  FeeRuleCreate,
+  PaymentResponse
 } from "@/apis/api-client";
 import aspenLogo from "@/assets/aspen-logo.png";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import ComingSoonPage from "@/components/ComingSoonPage";
 import { toast } from "sonner";
 
-type TabType = "dashboard" | "admins" | "students" | "parents" | "plans" | "accounts" | "dues" | "payments";
+type TabType = "dashboard" | "admins" | "students" | "parents" | "plans" | "accounts" | "dues" | "payments" | "transitions";
 
 export default function AdminDashboard() {
   usePageMeta("Admin Dashboard – Aspen Montessori", undefined, { noindex: true });
@@ -84,6 +86,7 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [duesPage, setDuesPage] = useState(1);
+  const [paymentsPage, setPaymentsPage] = useState(1);
   const [hideInactiveStudents, setHideInactiveStudents] = useState(false);
   const [hideInactiveParents, setHideInactiveParents] = useState(false);
   const [hideInactiveAdmins, setHideInactiveAdmins] = useState(false);
@@ -135,6 +138,8 @@ export default function AdminDashboard() {
   const [feeRules, setFeeRules] = useState<FeeRuleResponse[]>([]);
   const [feeAccounts, setFeeAccounts] = useState<FeeAccountResponse[]>([]);
   const [openDues, setOpenDues] = useState<FeeDueResponse[]>([]);
+  const [allDues, setAllDues] = useState<FeeDueResponse[]>([]);
+  const [payments, setPayments] = useState<PaymentResponse[]>([]);
   const [editingStudentId, setEditingStudentId] = useState<number | null>(null);
   const [editingParentId, setEditingParentId] = useState<string | null>(null);
   const [editingPlanId, setEditingPlanId] = useState<number | null>(null);
@@ -243,6 +248,17 @@ export default function AdminDashboard() {
     remarks: ""
   });
 
+  // Class Transitions and Graduation state variables
+  const [selectedTransitionStudentIds, setSelectedTransitionStudentIds] = useState<number[]>([]);
+  const [transitionNewClassName, setTransitionNewClassName] = useState("Montessori-1");
+  const [transitionNewAcademicYear, setTransitionNewAcademicYear] = useState("2026-2027");
+  const [isTransitionModalOpen, setIsTransitionModalOpen] = useState(false);
+  const [isGraduateModalOpen, setIsGraduateModalOpen] = useState(false);
+  const [graduateChecked, setGraduateChecked] = useState(false);
+  const [transitionSearchQuery, setTransitionSearchQuery] = useState("");
+  const [transitionClassFilter, setTransitionClassFilter] = useState("All");
+
+
   // Fetch all administrative records
   const fetchAllData = async () => {
     if (!isAuthenticated) return;
@@ -267,7 +283,11 @@ export default function AdminDashboard() {
       setFeeAccounts(accounts);
 
       const duesList = await api.getAdminFees();
+      setAllDues(duesList);
       setOpenDues(duesList.filter(d => d.status !== "paid"));
+
+      const allPayments = await api.getAdminPayments();
+      setPayments(allPayments);
     } catch (err: any) {
       console.error("Failed to load admin logs", err);
       toast.error("Error synchronizing administrative datasets.");
@@ -951,6 +971,65 @@ export default function AdminDashboard() {
     }
   };
 
+  // Student transitions & bulk promote handlers
+  const handleBulkTransition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedTransitionStudentIds.length === 0) {
+      toast.error("Please select at least one student to transition.");
+      return;
+    }
+    try {
+      await api.bulkTransitionStudents({
+        student_ids: selectedTransitionStudentIds,
+        new_class_name: transitionNewClassName,
+        new_academic_year: transitionNewAcademicYear
+      });
+      toast.success(`Successfully transitioned ${selectedTransitionStudentIds.length} students!`);
+      setSelectedTransitionStudentIds([]);
+      setIsTransitionModalOpen(false);
+      fetchAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to transition students.");
+    }
+  };
+
+  const handleBulkGraduate = async () => {
+    if (selectedTransitionStudentIds.length === 0) {
+      toast.error("Please select at least one student to graduate.");
+      return;
+    }
+    if (!graduateChecked) {
+      toast.error("Please confirm you understand the action by checking the box.");
+      return;
+    }
+    try {
+      await api.bulkGraduateStudents({
+        student_ids: selectedTransitionStudentIds
+      });
+      toast.success(`Successfully graduated ${selectedTransitionStudentIds.length} students!`);
+      setSelectedTransitionStudentIds([]);
+      setIsGraduateModalOpen(false);
+      setGraduateChecked(false);
+      fetchAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to graduate students.");
+    }
+  };
+
+  // Computed values for transitions tab filtering and bulk selection
+  const transitionFilteredStudents = students.filter((s) => {
+    const matchQuery =
+      !transitionSearchQuery ||
+      s.student_name.toLowerCase().includes(transitionSearchQuery.toLowerCase()) ||
+      s.admission_number.toLowerCase().includes(transitionSearchQuery.toLowerCase());
+    const matchClass =
+      transitionClassFilter === "All" ||
+      s.class_name === transitionClassFilter;
+    return matchQuery && matchClass;
+  });
+
+  const transitionVisibleActiveStudents = transitionFilteredStudents.filter(s => s.is_active !== false);
+
   const handleDeactivateStudent = async (id: number) => {
     try {
       await api.deactivateStudent(id);
@@ -1294,6 +1373,7 @@ export default function AdminDashboard() {
     { type: "accounts" as TabType, icon: BookOpen, label: "Fee Subscriptions" },
     { type: "dues" as TabType, icon: Calculator, label: "Generate Installments" },
     { type: "payments" as TabType, icon: CreditCard, label: "Record desk payments" },
+    { type: "transitions" as TabType, icon: ArrowRightLeft, label: "Class Transitions" },
   ];
 
   const filteredDues = openDues.filter((due) => {
@@ -3045,7 +3125,6 @@ export default function AdminDashboard() {
                     <table className="w-full text-xs md:text-sm">
                       <thead>
                         <tr className="border-b border-border text-muted-foreground text-left text-[10px] font-bold uppercase tracking-wider">
-                          <th className="pb-3">ID</th>
                           <th className="pb-3">Student Name</th>
                           <th className="pb-3">Plan Class</th>
                           <th className="pb-3">Effective Date</th>
@@ -3074,7 +3153,6 @@ export default function AdminDashboard() {
                           const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "Unknown Plan";
                           return (
                             <tr key={account.id} className={`border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors ${editingAccountId === account.id ? "bg-primary/5 ring-1 ring-primary/20" : ""}`}>
-                              <td className="py-3 font-semibold text-foreground font-mono">{account.id}</td>
                               <td className="py-3 text-foreground">{studentName}</td>
                               <td className="py-3 text-muted-foreground">{planName}</td>
                               <td className="py-3 text-muted-foreground">{account.effective_from}</td>
@@ -3335,6 +3413,21 @@ export default function AdminDashboard() {
                                       {isExpanded ? <ChevronDown size={14} className="text-primary" /> : <ChevronRight size={14} className="text-muted-foreground" />}
                                       <span>👤 {group.studentName}</span>
                                       <span className="text-muted-foreground ml-1 font-mono">({group.admissionNumber})</span>
+                                      {(() => {
+                                        const studentObj = students.find(s => s.id === group.studentId);
+                                        return studentObj ? (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedStudentForView(studentObj);
+                                            }}
+                                            className="ml-3 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] hover:bg-primary hover:text-primary-foreground font-bold transition-all normal-case tracking-normal"
+                                            title="View student's full financial statement"
+                                          >
+                                            View Full Ledger
+                                          </button>
+                                        ) : null;
+                                      })()}
                                       <span className="text-[9px] lowercase font-normal text-muted-foreground ml-auto bg-muted px-2 py-0.5 rounded-full">
                                         {group.dues.length} open due{group.dues.length > 1 ? "s" : ""}
                                       </span>
@@ -3448,7 +3541,7 @@ export default function AdminDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Record payment form */}
-                  <div className="lg:col-span-1 bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
+                  <div className="lg:col-span-1 bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4 self-start">
                     <h3 className="font-semibold text-foreground flex items-center gap-1.5">
                       <Save size={16} className="text-primary" /> Record manual payment receipt
                     </h3>
@@ -3554,30 +3647,491 @@ export default function AdminDashboard() {
                     </form>
                   </div>
 
-                  {/* Manual verification rules */}
-                  <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col justify-between">
+                  {/* Historical payments audit ledger */}
+                  <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col justify-between overflow-x-auto">
                     <div>
                       <h3 className="font-semibold text-foreground mb-4 flex items-center gap-1.5">
-                        <CheckCircle size={16} className="text-primary" /> Counter receipt guidelines
+                        <CheckCircle size={16} className="text-primary" /> Historical payments audit ledger
                       </h3>
-                      <div className="space-y-4 text-xs md:text-sm text-muted-foreground leading-relaxed">
-                        <p>
-                          <strong>1. Verify Physical Collections:</strong> Ensure cash counts are validated twice before locking in database record files.
-                        </p>
-                        <p>
-                          <strong>2. Validate Bank References:</strong> When registering bank IMPS/NEFT transfers, input reference dates in the remarks column.
-                        </p>
-                        <p>
-                          <strong>3. Instant Reconciliations:</strong> Recording a desk payment will automatically deduct the paid amount from the student's remaining due balance. If the remaining balance becomes ₹0, the installment status instantly moves to <span className="bg-emerald-500/10 text-emerald-700 px-1.5 py-0.5 rounded font-semibold text-xs font-mono">paid</span>.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-muted rounded-2xl text-xs flex items-center gap-2 mt-8">
-                      <Clock size={16} className="text-primary shrink-0" />
-                      <span>Ledgers are calculated on an instant, multi-session synchronized thread database.</span>
+                      {payments.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic py-8 text-center">No payment transactions recorded yet.</p>
+                      ) : (
+                        <>
+                          <table className="w-full text-xs text-left">
+                            <thead>
+                              <tr className="border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <th className="pb-2.5">Student</th>
+                                <th className="pb-2.5">Amount</th>
+                                <th className="pb-2.5">Mode</th>
+                                <th className="pb-2.5">Remarks / IDs</th>
+                                <th className="pb-2.5">Date</th>
+                                <th className="pb-2.5 text-right">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {payments.slice((paymentsPage - 1) * 10, paymentsPage * 10).map((p) => {
+                                const student = students.find((s) => s.id === p.student_id);
+                                const baseAmt = parseFloat(p.amount_paid);
+                                const gatewayCharges = parseFloat(p.gateway_charges || "0.00");
+                                const gatewayChargesGst = parseFloat(p.gateway_charges_gst || "0.00");
+                                const totalAmt = parseFloat(p.total_amount_paid || p.amount_paid);
+                                const totalCharges = gatewayCharges + gatewayChargesGst;
+
+                                return (
+                                  <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
+                                    <td className="py-2.5">
+                                      <p className="font-semibold text-foreground">{student ? student.student_name : `Student ID: ${p.student_id}`}</p>
+                                      <p className="text-[9px] text-muted-foreground font-mono">{student ? student.admission_number : "N/A"}</p>
+                                    </td>
+                                    <td className="py-2.5">
+                                      <p className="font-bold text-foreground">₹{totalAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
+                                      {totalCharges > 0 ? (
+                                        <p className="text-[9px] text-muted-foreground">
+                                          Base: ₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })} | Charges: ₹{totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                        </p>
+                                      ) : (
+                                        <p className="text-[9px] text-muted-foreground">Desk payment (no fees)</p>
+                                      )}
+                                    </td>
+                                    <td className="py-2.5 uppercase text-[9px] font-semibold text-muted-foreground">{p.payment_mode.replace("_", " ")}</td>
+                                    <td className="py-2.5 max-w-[150px] truncate" title={p.remarks || p.gateway_payment_id || ""}>
+                                      <p className="text-foreground truncate">{p.remarks || "No remarks"}</p>
+                                      {p.gateway_payment_id && <p className="text-[9px] text-muted-foreground font-mono truncate">ID: {p.gateway_payment_id}</p>}
+                                    </td>
+                                    <td className="py-2.5 text-muted-foreground font-mono text-[9px]">{new Date(p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</td>
+                                    <td className="py-2.5 text-right">
+                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
+                                        p.status === "success"
+                                          ? "bg-emerald-500/10 text-emerald-700"
+                                          : p.status === "pending"
+                                            ? "bg-amber-500/10 text-amber-700"
+                                            : "bg-rose-500/10 text-rose-700"
+                                      }`}>
+                                        {p.status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+
+                          {/* Pagination controls */}
+                          {(() => {
+                            const totalPaymentsPages = Math.ceil(payments.length / 10) || 1;
+                            if (totalPaymentsPages <= 1) return null;
+                            return (
+                              <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                                <span className="text-muted-foreground">
+                                  Showing payments {Math.min(payments.length, (paymentsPage - 1) * 10 + 1)}-{Math.min(payments.length, paymentsPage * 10)} of {payments.length}
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={paymentsPage === 1}
+                                    onClick={() => setPaymentsPage(prev => Math.max(prev - 1, 1))}
+                                    className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
+                                  >
+                                    Previous
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={paymentsPage === totalPaymentsPages}
+                                    onClick={() => setPaymentsPage(prev => Math.min(prev + 1, totalPaymentsPages))}
+                                    className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
+                                  >
+                                    Next
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {/* 8. Class Transitions and Promotion Panel */}
+            {activeTab === "transitions" && (
+              <motion.div
+                key="transitions"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Class Transitions & Promotions</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5 font-sans">
+                      Promote active students to new classes or mark them as graduated when they finish Mont 3.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-2xl p-6 border border-border shadow-sm space-y-6">
+                  {/* Filter and Selection Tools */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-4">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      {/* Search Input */}
+                      <div className="relative min-w-[240px]">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <input
+                          type="text"
+                          value={transitionSearchQuery}
+                          onChange={(e) => setTransitionSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                          placeholder="Search student or admission number..."
+                        />
+                      </div>
+                      {/* Class Filter */}
+                      <select
+                        value={transitionClassFilter}
+                        onChange={(e) => setTransitionClassFilter(e.target.value)}
+                        className="px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                      >
+                        <option value="All">All Current Classes</option>
+                        <option value="Montessori-1">Montessori-1</option>
+                        <option value="Montessori-2">Montessori-2</option>
+                        <option value="Montessori-3">Montessori-3</option>
+                        <option value="Toddlers">Toddlers</option>
+                        <option value="Daycare">Daycare</option>
+                      </select>
+                    </div>
+
+                    {/* Bulk Operations buttons */}
+                    {selectedTransitionStudentIds.length > 0 && (
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end bg-primary/5 px-4 py-2 rounded-2xl border border-primary/20 animate-pulse">
+                        <span className="text-xs font-semibold text-primary">
+                          {selectedTransitionStudentIds.length} Selected
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTransitionNewClassName("Montessori-2");
+                            setIsTransitionModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground hover:shadow-md text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all"
+                        >
+                          <ArrowRightLeft size={14} /> Promote / Transition
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGraduateChecked(false);
+                            setIsGraduateModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all"
+                        >
+                          <GraduationCap size={14} /> Graduate
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Student Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-border text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+                          <th className="pb-3 w-12">
+                            <input
+                              type="checkbox"
+                              checked={
+                                transitionVisibleActiveStudents.length > 0 &&
+                                transitionVisibleActiveStudents.every(s => selectedTransitionStudentIds.includes(s.id))
+                              }
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  const visibleActiveIds = transitionVisibleActiveStudents.map(s => s.id);
+                                  setSelectedTransitionStudentIds(prev => Array.from(new Set([...prev, ...visibleActiveIds])));
+                                } else {
+                                  const visibleActiveIds = transitionVisibleActiveStudents.map(s => s.id);
+                                  setSelectedTransitionStudentIds(prev => prev.filter(id => !visibleActiveIds.includes(id)));
+                                }
+                              }}
+                              className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
+                            />
+                          </th>
+                          <th className="pb-3">Student Name</th>
+                          <th className="pb-3">Admission Number</th>
+                          <th className="pb-3">Current Class</th>
+                          <th className="pb-3">Academic Year</th>
+                          <th className="pb-3">Status</th>
+                          <th className="pb-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const list = transitionFilteredStudents;
+
+                          if (list.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                                  No students match your current filter selection.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return list.map((student) => {
+                            const isSelected = selectedTransitionStudentIds.includes(student.id);
+                            const isGraduated = student.is_active === false;
+                            return (
+                              <tr
+                                key={student.id}
+                                className={`border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors ${
+                                  isGraduated ? "opacity-60 grayscale-[10%]" : ""
+                                }`}
+                              >
+                                <td className="py-3">
+                                  {!isGraduated ? (
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {
+                                        if (isSelected) {
+                                          setSelectedTransitionStudentIds(
+                                            selectedTransitionStudentIds.filter((id) => id !== student.id)
+                                          );
+                                        } else {
+                                          setSelectedTransitionStudentIds([
+                                            ...selectedTransitionStudentIds,
+                                            student.id,
+                                          ]);
+                                        }
+                                      }}
+                                      className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
+                                    />
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </td>
+                                <td className="py-3 font-semibold text-foreground">
+                                  {student.student_name}
+                                </td>
+                                <td className="py-3 text-muted-foreground font-mono">
+                                  {student.admission_number}
+                                </td>
+                                <td className="py-3 text-muted-foreground">
+                                  {student.class_name}
+                                </td>
+                                <td className="py-3 text-muted-foreground">
+                                  {student.academic_year}
+                                </td>
+                                <td className="py-3">
+                                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase ${
+                                    isGraduated
+                                      ? "bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                                      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                  }`}>
+                                    {isGraduated ? "Graduated" : "Active"}
+                                  </span>
+                                </td>
+                                <td className="py-3 text-right space-x-1.5">
+                                  {!isGraduated ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedTransitionStudentIds([student.id]);
+                                          setTransitionNewClassName(
+                                            student.class_name === "Montessori-1"
+                                              ? "Montessori-2"
+                                              : student.class_name === "Montessori-2"
+                                              ? "Montessori-3"
+                                              : "Montessori-1"
+                                          );
+                                          setIsTransitionModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 border border-primary/20 text-primary hover:bg-primary/5 rounded-lg font-medium text-[11px] transition-all"
+                                      >
+                                        Transition
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedTransitionStudentIds([student.id]);
+                                          setGraduateChecked(false);
+                                          setIsGraduateModalOpen(true);
+                                        }}
+                                        className="px-2 py-1 border border-rose-500/20 text-rose-600 hover:bg-rose-50 rounded-lg font-medium text-[11px] dark:hover:bg-rose-950/20 transition-all"
+                                      >
+                                        Graduate
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="text-[10px] text-muted-foreground font-sans">No actions</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Modals inside transitions block */}
+                {/* 1. Promote / Transition Modal */}
+                <AnimatePresence>
+                  {isTransitionModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md">
+                      <motion.div
+                        initial={{ scale: 0.95, y: 15 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.95, y: 15 }}
+                        className="bg-card border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4 text-foreground"
+                      >
+                        <div className="flex justify-between items-center pb-2 border-b border-border">
+                          <h3 className="font-semibold text-base flex items-center gap-1.5">
+                            <ArrowRightLeft size={18} className="text-primary" /> Promote / Transition Students
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsTransitionModalOpen(false);
+                              setSelectedTransitionStudentIds([]);
+                            }}
+                            className="p-1 rounded-full hover:bg-muted text-muted-foreground transition-all"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+
+                        <form onSubmit={handleBulkTransition} className="space-y-4">
+                          <p className="text-xs text-muted-foreground">
+                            You are transitioning <strong className="text-foreground">{selectedTransitionStudentIds.length}</strong> selected student(s). Their current class subscription fee accounts will be automatically deactivated and carry-forward subscriptions will be created for the new class.
+                          </p>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-muted-foreground mb-1">Target Class / Program</label>
+                            <select
+                              required
+                              value={transitionNewClassName}
+                              onChange={(e) => setTransitionNewClassName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                            >
+                              <option value="Montessori-1">Montessori-1</option>
+                              <option value="Montessori-2">Montessori-2</option>
+                              <option value="Montessori-3">Montessori-3</option>
+                              <option value="Toddlers">Toddlers</option>
+                              <option value="Daycare">Daycare</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-muted-foreground mb-1">New Academic Year</label>
+                            <input
+                              type="text"
+                              required
+                              value={transitionNewAcademicYear}
+                              onChange={(e) => setTransitionNewAcademicYear(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                              placeholder="2026-2027"
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsTransitionModalOpen(false);
+                                setSelectedTransitionStudentIds([]);
+                              }}
+                              className="px-4 py-2 border border-border text-muted-foreground rounded-full text-xs font-semibold hover:bg-muted transition-all"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              className="px-4 py-2 bg-primary text-primary-foreground hover:shadow-md rounded-full text-xs font-semibold transition-all"
+                            >
+                              Transition Students
+                            </button>
+                          </div>
+                        </form>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                {/* 2. Graduate Modal */}
+                <AnimatePresence>
+                  {isGraduateModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md">
+                      <motion.div
+                        initial={{ scale: 0.95, y: 15 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.95, y: 15 }}
+                        className="bg-card border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4 text-foreground"
+                      >
+                        <div className="flex justify-between items-center pb-2 border-b border-border">
+                          <h3 className="font-semibold text-base text-rose-600 flex items-center gap-1.5">
+                            <GraduationCap size={18} /> Graduate / Deactivate Students
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsGraduateModalOpen(false);
+                              setSelectedTransitionStudentIds([]);
+                            }}
+                            className="p-1 rounded-full hover:bg-muted text-muted-foreground transition-all"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
+                            <AlertCircle className="shrink-0 mt-0.5" size={16} />
+                            <p>
+                              <strong>Warning:</strong> Graduating <strong className="text-foreground">{selectedTransitionStudentIds.length}</strong> student(s) will mark them as inactive (graduated). Their active fee plans will be deactivated, stopping future dues generation. Parent accounts will remain active.
+                            </p>
+                          </div>
+
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={graduateChecked}
+                              onChange={(e) => setGraduateChecked(e.target.checked)}
+                              className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                            />
+                            <span className="text-xs text-muted-foreground font-medium">
+                              I understand this action cannot be easily undone.
+                            </span>
+                          </label>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsGraduateModalOpen(false);
+                                setSelectedTransitionStudentIds([]);
+                              }}
+                              className="px-4 py-2 border border-border text-muted-foreground rounded-full text-xs font-semibold hover:bg-muted transition-all"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!graduateChecked}
+                              onClick={handleBulkGraduate}
+                              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md rounded-full text-xs font-semibold transition-all"
+                            >
+                              Confirm Graduation
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>
@@ -3732,7 +4286,87 @@ export default function AdminDashboard() {
                   })()}
                 </div>
 
-                {/* 4. Student Notes */}
+                {/* 4. Student Financial Ledger */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Calculator size={14} className="text-primary" /> Student Financial Ledger
+                  </h4>
+                  {(() => {
+                    const studentDues = allDues.filter((d) => d.student_id === selectedStudentForView.id);
+                    if (studentDues.length === 0) {
+                      return <p className="text-xs text-muted-foreground italic">No fee due installments generated yet.</p>;
+                    }
+
+                    const totalBilled = studentDues.reduce((sum, d) => sum + parseFloat(d.final_amount), 0);
+                    const totalPaid = studentDues.reduce((sum, d) => sum + parseFloat(d.paid_amount), 0);
+                    const totalRemaining = studentDues.reduce((sum, d) => sum + parseFloat(d.balance), 0);
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Summary Stats Grid */}
+                        <div className="grid grid-cols-3 gap-3 bg-muted/40 border border-border/50 p-4 rounded-2xl text-center text-xs">
+                          <div>
+                            <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Total Billed</span>
+                            <span className="text-sm font-bold text-foreground">₹{totalBilled.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5 text-emerald-600">Already Paid</span>
+                            <span className="text-sm font-bold text-emerald-600">₹{totalPaid.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5 text-primary">Remaining</span>
+                            <span className="text-sm font-bold text-primary">₹{totalRemaining.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* List of all dues (including paid ones) */}
+                        <div className="border border-border/60 rounded-2xl overflow-hidden bg-card">
+                          <table className="w-full text-xs text-left">
+                            <thead>
+                              <tr className="bg-muted/40 border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <th className="py-2.5 px-4">Title</th>
+                                <th className="py-2.5 px-3">Date</th>
+                                <th className="py-2.5 px-3">Billed</th>
+                                <th className="py-2.5 px-3">Paid</th>
+                                <th className="py-2.5 px-3">Balance</th>
+                                <th className="py-2.5 px-3 text-right pr-4">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {studentDues.map((due) => (
+                                <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
+                                  <td className="py-3 px-4">
+                                    <p className="font-semibold text-foreground truncate max-w-[130px]" title={due.due_title}>{due.due_title}</p>
+                                    {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[130px]" title={due.remarks}>{due.remarks}</p>}
+                                  </td>
+                                  <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
+                                  <td className="py-3 px-3 text-foreground">₹{parseFloat(due.final_amount).toLocaleString()}</td>
+                                  <td className="py-3 px-3 text-emerald-600 font-medium">₹{parseFloat(due.paid_amount).toLocaleString()}</td>
+                                  <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
+                                  <td className="py-3 px-3 text-right pr-4">
+                                    <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
+                                      due.status === "paid"
+                                        ? "bg-emerald-500/10 text-emerald-700"
+                                        : due.status === "partial"
+                                          ? "bg-amber-500/10 text-amber-700"
+                                          : due.status === "overdue"
+                                            ? "bg-rose-500/10 text-rose-700"
+                                            : "bg-blue-500/10 text-blue-700"
+                                    }`}>
+                                      {due.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 5. Student Notes */}
                 {selectedStudentForView.notes && (
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Internal Administrator Notes</h4>
