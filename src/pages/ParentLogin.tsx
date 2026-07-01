@@ -68,11 +68,11 @@ export default function ParentLogin() {
     const hash = window.location.hash || "";
     const searchParams = new URLSearchParams(window.location.search);
     return hash.includes("type=recovery") ||
-           hash.includes("type=invite") ||
-           hash.includes("type=signup") ||
-           searchParams.get("type") === "recovery" ||
-           searchParams.get("type") === "invite" ||
-           searchParams.get("type") === "signup";
+      hash.includes("type=invite") ||
+      hash.includes("type=signup") ||
+      searchParams.get("type") === "recovery" ||
+      searchParams.get("type") === "invite" ||
+      searchParams.get("type") === "signup";
   });
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -102,7 +102,51 @@ export default function ParentLogin() {
     ? dues
     : dues.filter((due) => !isFutureDue(due.due_date) || due.status === "paid");
 
+  // School calendar events definition
+  const schoolEvents = [
+    {
+      date: "2026-08-15",
+      title: "Independence Day Celebration",
+      description: "Flag hoisting ceremony, cultural activities, and student performances.",
+    },
+    {
+      date: "2026-08-31",
+      title: "Dr. Maria Montessori's Birthday",
+      description: "Hands-on learning showcases celebrating Montessori pedagogy.",
+    },
+    {
+      date: "2026-09-05",
+      title: "Teacher's Day Celebration",
+      description: "Special honoring programs organized for our educators.",
+    },
+    {
+      date: "2026-10-02",
+      title: "Gandhi Jayanti",
+      description: "Day observance",
+    },
+    {
+      date: "2026-11-14",
+      title: "Children's Day Carnival",
+      description: "Games, food stalls, and creative workshops for children.",
+    }
+  ];
 
+  const upcomingEvents = schoolEvents
+    .filter((e) => {
+      const eventDate = new Date(e.date);
+      eventDate.setHours(23, 59, 59, 999);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return eventDate.getTime() >= today.getTime();
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const formatEventDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const month = d.toLocaleString("default", { month: "short" }).toUpperCase();
+    return { day, month };
+  };
 
   // Load dashboard data once authenticated
   const fetchDashboardData = async () => {
@@ -204,13 +248,13 @@ export default function ParentLogin() {
       setError("Please enter your email");
       return;
     }
-    
+
     let email = emailInput.trim();
     if (!email.includes("@")) {
       email = email + "@gmail.com";
       setEmailInput(email);
     }
-    
+
     if (!passwordInput) {
       setError("Please enter your password");
       return;
@@ -618,11 +662,10 @@ export default function ParentLogin() {
                               setEmailInput(emailInput + ext);
                             }
                           }}
-                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-                            emailInput.endsWith(ext)
-                              ? "bg-primary/10 text-primary border-primary/30 font-medium"
-                              : "bg-muted hover:bg-muted/80 text-muted-foreground border-transparent"
-                          }`}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${emailInput.endsWith(ext)
+                            ? "bg-primary/10 text-primary border-primary/30 font-medium"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground border-transparent"
+                            }`}
                         >
                           {ext}
                         </button>
@@ -797,6 +840,40 @@ export default function ParentLogin() {
 
           {/* Fee stats outstanding summary */}
           <div className="space-y-6">
+            {/* Upcoming Important Dates */}
+            <motion.div
+              {...fadeUp}
+              className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                <Calendar size={16} className="text-primary" /> Upcoming Important Dates
+              </h3>
+              {upcomingEvents.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                  <p className="text-xs font-semibold text-foreground">Stay tuned for updates!</p>
+                  <p className="text-[10px] text-muted-foreground/80">Check back later for school calendar and event details.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingEvents.map((event, idx) => {
+                    const { day, month } = formatEventDate(event.date);
+                    return (
+                      <div key={idx} className="flex gap-3 items-center p-2 rounded-2xl hover:bg-muted/40 transition-colors border border-transparent hover:border-border/30">
+                        <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 border border-primary/20 flex flex-col items-center justify-center text-center">
+                          <span className="text-[8px] font-bold text-primary leading-none tracking-wider">{month}</span>
+                          <span className="text-sm font-bold text-foreground leading-none mt-0.5">{day}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-semibold text-foreground truncate" title={event.title}>{event.title}</h4>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <CreditCard size={18} className="text-primary" /> Fee Account Dues
             </h2>
@@ -848,14 +925,12 @@ export default function ParentLogin() {
                 id="show-future-toggle"
                 type="button"
                 onClick={() => setShowFutureInstallments(!showFutureInstallments)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  showFutureInstallments ? "bg-primary" : "bg-muted-foreground/30"
-                }`}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showFutureInstallments ? "bg-primary" : "bg-muted-foreground/30"
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out ${
-                    showFutureInstallments ? "translate-x-4" : "translate-x-0"
-                  }`}
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out ${showFutureInstallments ? "translate-x-4" : "translate-x-0"
+                    }`}
                 />
               </button>
             </div>
@@ -899,10 +974,10 @@ export default function ParentLogin() {
                     key={due.id}
                     {...fadeUp}
                     className={`bg-card border rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all ${isPaid
-                        ? "border-emerald-500/20 bg-emerald-500/[0.01]"
-                        : isOverdue
-                          ? "border-rose-500/20 bg-rose-500/[0.01]"
-                          : "border-border"
+                      ? "border-emerald-500/20 bg-emerald-500/[0.01]"
+                      : isOverdue
+                        ? "border-rose-500/20 bg-rose-500/[0.01]"
+                        : "border-border"
                       }`}
                   >
                     <div>
@@ -911,12 +986,12 @@ export default function ParentLogin() {
                           {studentName}
                         </span>
                         <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${isPaid
-                            ? "bg-emerald-500/10 text-emerald-700"
-                            : isPartial
-                              ? "bg-amber-500/10 text-amber-700"
-                              : isOverdue
-                                ? "bg-rose-500/10 text-rose-700"
-                                : "bg-blue-500/10 text-blue-700"
+                          ? "bg-emerald-500/10 text-emerald-700"
+                          : isPartial
+                            ? "bg-amber-500/10 text-amber-700"
+                            : isOverdue
+                              ? "bg-rose-500/10 text-rose-700"
+                              : "bg-blue-500/10 text-blue-700"
                           }`}>
                           {due.status}
                         </span>
@@ -961,11 +1036,10 @@ export default function ParentLogin() {
                         <button
                           onClick={() => handlePayFee(due)}
                           disabled={isPaying === due.id || hasUnpaidPriorTerm}
-                          className={`w-full py-2.5 rounded-full font-semibold text-sm transition-all flex items-center justify-center gap-1.5 ${
-                            hasUnpaidPriorTerm
-                              ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60 border border-border"
-                              : "bg-primary text-primary-foreground hover:shadow-md"
-                          }`}
+                          className={`w-full py-2.5 rounded-full font-semibold text-sm transition-all flex items-center justify-center gap-1.5 ${hasUnpaidPriorTerm
+                            ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60 border border-border"
+                            : "bg-primary text-primary-foreground hover:shadow-md"
+                            }`}
                         >
                           {isPaying === due.id ? (
                             <>
@@ -1047,10 +1121,10 @@ export default function ParentLogin() {
                         </td>
                         <td className="py-4">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase ${isSuccess
-                              ? "bg-emerald-500/10 text-emerald-700"
-                              : p.status === "pending"
-                                ? "bg-amber-500/10 text-amber-700"
-                                : "bg-rose-500/10 text-rose-700"
+                            ? "bg-emerald-500/10 text-emerald-700"
+                            : p.status === "pending"
+                              ? "bg-amber-500/10 text-amber-700"
+                              : "bg-rose-500/10 text-rose-700"
                             }`}>
                             {isSuccess && <CheckCircle size={10} />}
                             {p.status}
