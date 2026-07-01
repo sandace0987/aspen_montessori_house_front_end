@@ -980,7 +980,8 @@ export default function ParentLogin() {
               {...fadeUp}
               className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden mt-6"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+              <div className="absolute top-0 left-0 w-24 h-24 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
                 <Calendar size={16} className="text-primary" /> Upcoming Important Dates
               </h3>
@@ -993,14 +994,32 @@ export default function ParentLogin() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {upcomingEvents.map((event, idx) => {
                     const { day, month } = formatEventDate(event.date);
+                    // Alternating theme classes (Green vs Warm Brown/Amber)
+                    const isGreen = idx % 2 === 0;
+                    const containerClass = isGreen
+                      ? "bg-emerald-500/[0.02] border-emerald-500/10 hover:bg-emerald-500/[0.06] hover:border-emerald-500/20"
+                      : "bg-amber-600/[0.02] border-amber-600/10 hover:bg-amber-600/[0.06] hover:border-amber-600/20";
+                    const badgeClass = isGreen
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                      : "bg-amber-600/10 border-amber-600/20 text-amber-700 dark:text-amber-400";
+                    const monthTextClass = isGreen
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-amber-700 dark:text-amber-400";
+
                     return (
-                      <div key={idx} className="flex gap-3 items-center p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/75 transition-colors border border-border/50">
-                        <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 border border-primary/20 flex flex-col items-center justify-center text-center">
-                          <span className="text-[8px] font-bold text-primary leading-none tracking-wider">{month}</span>
-                          <span className="text-sm font-bold text-foreground leading-none mt-0.5">{day}</span>
+                      <div
+                        key={idx}
+                        className={`flex gap-3.5 items-center p-3 rounded-2xl border transition-all duration-300 shadow-sm ${containerClass}`}
+                      >
+                        <div className={`w-11 h-11 shrink-0 rounded-xl border flex flex-col items-center justify-center text-center shadow-inner ${badgeClass}`}>
+                          <span className={`text-[9px] font-bold uppercase leading-none tracking-wider ${monthTextClass}`}>{month}</span>
+                          <span className="text-base font-extrabold text-foreground leading-none mt-0.5">{day}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-semibold text-foreground truncate" title={event.title}>{event.title}</h4>
+                          <h4 className="text-xs font-bold text-foreground truncate" title={event.title}>{event.title}</h4>
+                          <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                            📅 {new Date(event.date).toLocaleDateString("en-IN", { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
                       </div>
                     );
