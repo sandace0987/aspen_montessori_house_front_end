@@ -46,6 +46,9 @@ export default function Footer() {
               >
                 Newsletter
               </Link>
+              <Link to="/contact" className="block text-muted-foreground text-sm hover:text-primary transition-colors">
+                Contact Us
+              </Link>
             </nav>
           </div>
 
@@ -60,13 +63,25 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border mt-12 pt-8 text-center">
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4">
             <Link to="/privacy" className="text-muted-foreground text-xs hover:text-primary transition-colors">
               Privacy Policy
             </Link>
             <span className="text-muted-foreground/40 text-xs">|</span>
             <Link to="/terms" className="text-muted-foreground text-xs hover:text-primary transition-colors">
               Terms &amp; Conditions
+            </Link>
+            <span className="text-muted-foreground/40 text-xs">|</span>
+            <Link to="/refund" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+              Cancellation &amp; Refund Policy
+            </Link>
+            <span className="text-muted-foreground/40 text-xs">|</span>
+            <Link to="/shipping" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+              Shipping &amp; Delivery Policy
+            </Link>
+            <span className="text-muted-foreground/40 text-xs">|</span>
+            <Link to="/contact" className="text-muted-foreground text-xs hover:text-primary transition-colors">
+              Contact Us
             </Link>
           </div>
           <p className="text-muted-foreground text-xs">

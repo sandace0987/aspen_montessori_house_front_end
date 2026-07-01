@@ -836,30 +836,27 @@ export default function ParentLogin() {
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Fee stats outstanding summary */}
-          <div className="space-y-6">
             {/* Upcoming Important Dates */}
             <motion.div
               {...fadeUp}
-              className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden"
+              className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden mt-6"
             >
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
                 <Calendar size={16} className="text-primary" /> Upcoming Important Dates
               </h3>
               {upcomingEvents.length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                <div className="py-6 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
                   <p className="text-xs font-semibold text-foreground">Stay tuned for updates!</p>
                   <p className="text-[10px] text-muted-foreground/80">Check back later for school calendar and event details.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {upcomingEvents.map((event, idx) => {
                     const { day, month } = formatEventDate(event.date);
                     return (
-                      <div key={idx} className="flex gap-3 items-center p-2 rounded-2xl hover:bg-muted/40 transition-colors border border-transparent hover:border-border/30">
+                      <div key={idx} className="flex gap-3 items-center p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/75 transition-colors border border-border/50">
                         <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 border border-primary/20 flex flex-col items-center justify-center text-center">
                           <span className="text-[8px] font-bold text-primary leading-none tracking-wider">{month}</span>
                           <span className="text-sm font-bold text-foreground leading-none mt-0.5">{day}</span>
@@ -873,7 +870,10 @@ export default function ParentLogin() {
                 </div>
               )}
             </motion.div>
+          </div>
 
+          {/* Fee stats outstanding summary */}
+          <div className="space-y-6">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <CreditCard size={18} className="text-primary" /> Fee Account Dues
             </h2>
@@ -1021,6 +1021,12 @@ export default function ParentLogin() {
                           <span>₹{parseFloat(due.final_amount).toLocaleString()}</span>
                         </div>
                       </div>
+                      {due.remarks && (
+                        <div className="mt-4 p-2.5 rounded-2xl bg-muted/65 border border-border/40 text-[11px] leading-relaxed text-muted-foreground flex flex-col gap-0.5">
+                          <span className="font-semibold text-foreground text-[10px] uppercase tracking-wider text-primary/80">Admin Note</span>
+                          <span>{due.remarks}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-4">

@@ -179,6 +179,15 @@ export interface FeeDueGenerateRequest {
   remarks?: string;
 }
 
+export interface FeeDueCustomCreate {
+  fee_account_id: number;
+  due_title: string;
+  amount: number;
+  due_date: string;
+  remarks?: string;
+}
+
+
 export interface FeeDueResponse {
   id: number;
   student_id: number;
@@ -577,6 +586,10 @@ export class APIClient {
 
   public async deleteFeeDue(dueId: number): Promise<{ message: string }> {
     return this.request<{ message: string }>("DELETE", `/api/v1/admin/fee-dues/${dueId}`);
+  }
+
+  public async createCustomDue(req: FeeDueCustomCreate): Promise<FeeDueResponse> {
+    return this.request<FeeDueResponse>("POST", "/api/v1/admin/fee-dues/custom", req);
   }
 }
 

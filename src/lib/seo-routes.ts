@@ -115,4 +115,31 @@ export const seoRoutes: SeoRoute[] = [
       <p>Terms and Conditions for using the Aspen Montessori House website. Read about website usage, intellectual property, disclaimers, and governing law.</p>
       <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/privacy">Privacy Policy</a></nav>`,
   },
+  {
+    path: "/refund",
+    title: "Cancellation & Refund Policy – Aspen Montessori Hyderabad",
+    description:
+      "Cancellation and Refund Policy for Aspen Montessori House. Read about fee refunds, double payments, and school withdrawal terms.",
+    criticalHtml: `<h1>Cancellation &amp; Refund Policy</h1>
+      <p>Cancellation and Refund Policy for Aspen Montessori House. Explains how double payments and mid-term admissions withdrawals are processed.</p>
+      <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/contact">Contact Us</a></nav>`,
+  },
+  {
+    path: "/shipping",
+    title: "Shipping & Delivery Policy – Aspen Montessori Hyderabad",
+    description:
+      "Shipping and Delivery Policy for Aspen Montessori House. Explains distribution of materials and education service delivery.",
+    criticalHtml: `<h1>Shipping &amp; Delivery Policy</h1>
+      <p>Explains campus distribution of learning materials and daycare/school service delivery details for Aspen Montessori House.</p>
+      <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/contact">Contact Us</a></nav>`,
+  },
+  {
+    path: "/contact",
+    title: "Contact Us – Aspen Montessori Hyderabad",
+    description:
+      "Get in touch with Aspen Montessori House. School phone number, email address, campus location, and working hours.",
+    criticalHtml: `<h1>Contact Us</h1>
+      <p>Get in touch with Aspen Montessori House for admissions and general enquiries in Manikonda, Hyderabad.</p>
+      <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/programs">Our Programs</a></nav>`,
+  },
 ];

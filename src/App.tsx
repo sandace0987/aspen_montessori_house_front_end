@@ -22,6 +22,9 @@ const Programs = lazy(() => import("./pages/Programs.tsx"));
 const SummerCamp = lazy(() => import("./pages/SummerCamp.tsx"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
 const TermsConditions = lazy(() => import("./pages/TermsConditions.tsx"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy.tsx"));
+const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy.tsx"));
+const ContactUs = lazy(() => import("./pages/ContactUs.tsx"));
 
 // Defer chatbot & scroll-to-top
 const ChatBot = lazy(() => import("./components/ChatBot.tsx"));
@@ -158,6 +161,9 @@ const App = () => {
                   <Route path="/summer-camp" element={<SummerCamp />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsConditions />} />
+                  <Route path="/refund" element={<RefundPolicy />} />
+                  <Route path="/shipping" element={<ShippingPolicy />} />
+                  <Route path="/contact" element={<ContactUs />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

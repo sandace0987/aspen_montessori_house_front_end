@@ -42,7 +42,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Mail,
-  Tag
+  Tag,
+  PlusCircle
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/context/AuthContext";
@@ -216,6 +217,17 @@ export default function AdminDashboard() {
     first_due_date: new Date().toISOString().split("T")[0],
     remarks: ""
   });
+
+  // Custom standalone due form state
+  const [customDueForm, setCustomDueForm] = useState({
+    fee_account_id: 0,
+    due_title: "",
+    amount: 0,
+    due_date: new Date().toISOString().split("T")[0],
+    remarks: ""
+  });
+  const [isCustomDueModalOpen, setIsCustomDueModalOpen] = useState(false);
+
 
   // Selected student ID for manual payment form
   const [paymentSelectedStudentId, setPaymentSelectedStudentId] = useState<number>(0);
@@ -825,11 +837,15 @@ export default function AdminDashboard() {
         toast.error("Please select a fee subscription account.");
         return;
       }
+      const selectedAcc = feeAccounts.find(a => a.id === Number(generateForm.fee_account_id));
+      const cycle = selectedAcc?.payment_cycle || "quarterly";
+      const maxInstallments = cycle === "yearly" ? 1 : cycle === "quarterly" ? (selectedAcc?.installments ?? 3) : 12;
+
       const generated = await api.generateFeeDues({
         fee_account_id: Number(generateForm.fee_account_id),
         period_start: generateForm.period_start,
-        starting_installment: Number(generateForm.starting_installment),
-        installment_count: Number(generateForm.installment_count),
+        starting_installment: 1,
+        installment_count: maxInstallments,
         first_due_date: generateForm.first_due_date,
         remarks: generateForm.remarks || undefined
       });
@@ -837,6 +853,44 @@ export default function AdminDashboard() {
       fetchAllData();
     } catch (err: any) {
       toast.error(err.message || "Computing due generation failed.");
+    }
+  };
+
+  // Create Custom Standalone Due
+  const handleCreateCustomDue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!customDueForm.fee_account_id) {
+        toast.error("Please select a fee subscription account.");
+        return;
+      }
+      if (!customDueForm.due_title.trim()) {
+        toast.error("Please enter a due title.");
+        return;
+      }
+      if (customDueForm.amount <= 0) {
+        toast.error("Amount must be greater than zero.");
+        return;
+      }
+      await api.createCustomDue({
+        fee_account_id: Number(customDueForm.fee_account_id),
+        due_title: customDueForm.due_title.trim(),
+        amount: Number(customDueForm.amount),
+        due_date: customDueForm.due_date,
+        remarks: customDueForm.remarks.trim() || undefined
+      });
+      toast.success("Custom charge installment added successfully!");
+      setIsCustomDueModalOpen(false);
+      setCustomDueForm({
+        fee_account_id: 0,
+        due_title: "",
+        amount: 0,
+        due_date: new Date().toISOString().split("T")[0],
+        remarks: ""
+      });
+      fetchAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add custom charge.");
     }
   };
 
@@ -3046,6 +3100,22 @@ export default function AdminDashboard() {
                                     <Pencil size={13} />
                                   </button>
                                   <button
+                                    onClick={() => {
+                                      setCustomDueForm({
+                                        fee_account_id: account.id,
+                                        due_title: "",
+                                        amount: 0,
+                                        due_date: new Date().toISOString().split("T")[0],
+                                        remarks: ""
+                                      });
+                                      setIsCustomDueModalOpen(true);
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                                    title="Add custom charge/due"
+                                  >
+                                    <PlusCircle size={13} />
+                                  </button>
+                                  <button
                                     onClick={() => handleDeleteSubscription(account.id)}
                                     className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors"
                                     title="Delete subscription"
@@ -3126,46 +3196,18 @@ export default function AdminDashboard() {
                       </div>
                       {(() => {
                         const selectedAcc = feeAccounts.find(a => a.id === generateForm.fee_account_id);
+                        if (!selectedAcc) return null;
                         const cycle = selectedAcc?.payment_cycle || "quarterly";
                         const maxInstallments = cycle === "yearly" ? 1 : cycle === "quarterly" ? (selectedAcc?.installments ?? 3) : 12;
                         return (
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 gap-4 bg-muted/40 p-3 rounded-2xl border border-border/50 text-xs">
                             <div>
-                              <label className="block text-xs font-semibold text-muted-foreground mb-1">Starting Installment No.</label>
-                              <select
-                                required
-                                value={generateForm.starting_installment}
-                                onChange={(e) => setGenerateForm({ ...generateForm, starting_installment: Number(e.target.value) })}
-                                className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                                disabled={cycle === "yearly"}
-                              >
-                                {Array.from({ length: maxInstallments }, (_, i) => i + 1).map(n => (
-                                  <option key={n} value={n}>{n}</option>
-                                ))}
-                              </select>
+                              <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Starting Installment</span>
+                              <span className="font-bold text-foreground">Term 1</span>
                             </div>
                             <div>
-                              <label className="block text-xs font-semibold text-muted-foreground mb-1">Count (Installments)</label>
-                              <select
-                                required
-                                value={generateForm.installment_count}
-                                onChange={(e) => setGenerateForm({ ...generateForm, installment_count: Number(e.target.value) })}
-                                className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                                disabled={cycle === "yearly"}
-                              >
-                                {cycle === "quarterly" ? (
-                                  <>
-                                    <option value={3} disabled={maxInstallments !== 3}>3 Installments</option>
-                                    <option value={4} disabled={maxInstallments !== 4}>4 Installments</option>
-                                  </>
-                                ) : cycle === "yearly" ? (
-                                  <option value={1}>1 Installment</option>
-                                ) : (
-                                  Array.from({ length: maxInstallments }, (_, i) => i + 1).map(n => (
-                                    <option key={n} value={n}>{n}</option>
-                                  ))
-                                )}
-                              </select>
+                              <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Total Installments</span>
+                              <span className="font-bold text-primary">{maxInstallments} Installment{maxInstallments > 1 ? "s" : ""}</span>
                             </div>
                           </div>
                         );
@@ -3867,6 +3909,120 @@ export default function AdminDashboard() {
                   Close Detail Panel
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Standalone Due Modal */}
+      <AnimatePresence>
+        {isCustomDueModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-card border border-border rounded-3xl w-full max-w-md shadow-2xl flex flex-col relative text-foreground"
+            >
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={() => setIsCustomDueModalOpen(false)}
+                  className="p-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-border">
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Calculator size={18} className="text-primary" /> Add Custom Charge / Due
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">This will show up on the parent portal as an installment.</p>
+              </div>
+
+              <form onSubmit={handleCreateCustomDue} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">Student</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={(() => {
+                      const acc = feeAccounts.find(a => a.id === customDueForm.fee_account_id);
+                      const stu = acc ? students.find(s => s.id === acc.student_id) : null;
+                      return stu ? `${stu.student_name} [${stu.admission_number}]` : "Unknown";
+                    })()}
+                    className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs font-medium text-muted-foreground outline-none cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">Due Title / Description</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Uniform Fee, Daycare Buffer, Camp Fee"
+                    value={customDueForm.due_title}
+                    onChange={(e) => setCustomDueForm({ ...customDueForm, due_title: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">Amount (INR)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="Amount to pay"
+                    value={customDueForm.amount || ""}
+                    onChange={(e) => setCustomDueForm({ ...customDueForm, amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={customDueForm.due_date}
+                    onChange={(e) => setCustomDueForm({ ...customDueForm, due_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">Remarks / Note for Parent (Optional)</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Provide details of this charge..."
+                    value={customDueForm.remarks}
+                    onChange={(e) => setCustomDueForm({ ...customDueForm, remarks: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomDueModalOpen(false)}
+                    className="px-4 py-2 rounded-full border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-xs hover:shadow-md transition-all"
+                  >
+                    Add Charge
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
