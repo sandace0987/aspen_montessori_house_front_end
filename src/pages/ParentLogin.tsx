@@ -397,6 +397,7 @@ export default function ParentLogin() {
               razorpay_signature: response.razorpay_signature,
             });
             toast.success("Payment verified successfully!", { id: "verify-toast" });
+            setConfirmingPaymentDue(null);
             setPaymentSuccess(verification);
             fetchDashboardData();
           } catch (err: any) {
