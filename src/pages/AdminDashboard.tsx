@@ -249,8 +249,16 @@ export default function AdminDashboard() {
   // Selected student ID for manual payment form
   const [paymentSelectedStudentId, setPaymentSelectedStudentId] = useState<number>(0);
 
-  // Set of student IDs currently expanded in the dues ledger
   const [expandedStudentIds, setExpandedStudentIds] = useState<Record<number, boolean>>({});
+
+  const formatDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "N/A";
+    const parts = dateStr.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  };
 
   // Manual payment form
   const [paymentForm, setPaymentForm] = useState({
@@ -3545,7 +3553,7 @@ export default function AdminDashboard() {
                                 )}
                               </td>
                               <td className="py-3 text-muted-foreground">{planName}</td>
-                              <td className="py-3 text-muted-foreground">{account.effective_from}</td>
+                              <td className="py-3 text-muted-foreground">{formatDate(account.effective_from)}</td>
                               <td className="py-3 font-semibold capitalize text-primary">
                                 {account.payment_cycle === "quarterly" ? `Quarterly (${account.installments || 3} Inst)` : account.payment_cycle}
                               </td>
@@ -3900,7 +3908,17 @@ export default function AdminDashboard() {
                                 {isExpanded && group.dues.map((due) => (
                                   <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
                                     <td className="py-3 pl-6">
-                                      <p className="font-semibold text-foreground truncate max-w-[180px]" title={due.due_title}>{due.due_title}</p>
+                                      {(() => {
+                                        const parts = due.due_title.split(" (");
+                                        const mainTitle = parts[0];
+                                        const yearPart = parts[1] ? "(" + parts[1] : "";
+                                        return (
+                                          <>
+                                            <p className="font-semibold text-foreground" title={due.due_title}>{mainTitle}</p>
+                                            {yearPart && <p className="text-[10px] text-muted-foreground mt-0.5">{yearPart}</p>}
+                                          </>
+                                        );
+                                      })()}
                                       <p className="text-[9px] text-muted-foreground font-mono">Due ID: {due.id}</p>
                                     </td>
                                     <td className="py-3 font-semibold text-foreground">
@@ -4781,11 +4799,11 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <p className="text-muted-foreground mb-1">Date of Birth</p>
-                      <p className="font-semibold text-foreground">{selectedStudentForView.date_of_birth || "N/A"}</p>
+                      <p className="font-semibold text-foreground">{formatDate(selectedStudentForView.date_of_birth)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground mb-1">Joining Date</p>
-                      <p className="font-semibold text-foreground">{selectedStudentForView.joining_date || "N/A"}</p>
+                      <p className="font-semibold text-foreground">{formatDate(selectedStudentForView.joining_date)}</p>
                     </div>
 
                   </div>
@@ -4841,7 +4859,7 @@ export default function AdminDashboard() {
                             <div key={sub.id} className="bg-muted/30 border border-border/40 p-4 rounded-2xl text-xs md:text-sm flex items-center justify-between">
                               <div>
                                 <p className="font-semibold text-foreground">{plan ? plan.class_name : "Fee Plan"} ({sub.payment_cycle})</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">Enrolled from: {sub.effective_from}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Enrolled from: {formatDate(sub.effective_from)}</p>
                               </div>
                               <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase ${sub.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-rose-500/10 text-rose-700"
                                 }`}>
@@ -4908,10 +4926,20 @@ export default function AdminDashboard() {
                                 return (
                                   <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
                                     <td className="py-3 px-4">
-                                      <p className="font-semibold text-foreground truncate max-w-[220px]" title={due.due_title}>{due.due_title}</p>
+                                      {(() => {
+                                        const parts = due.due_title.split(" (");
+                                        const mainTitle = parts[0];
+                                        const yearPart = parts[1] ? "(" + parts[1] : "";
+                                        return (
+                                          <>
+                                            <p className="font-semibold text-foreground" title={due.due_title}>{mainTitle}</p>
+                                            {yearPart && <p className="text-[10px] text-muted-foreground mt-0.5">{yearPart}</p>}
+                                          </>
+                                        );
+                                      })()}
                                       {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[220px]" title={due.remarks}>{due.remarks}</p>}
                                     </td>
-                                    <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
+                                    <td className="py-3 px-3 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{formatDate(due.due_date)}</td>
                                     <td className="py-3 px-3 font-semibold text-foreground">
                                       <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
                                       {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0 || parseFloat(due.resource_fee || "0") > 0) && (
