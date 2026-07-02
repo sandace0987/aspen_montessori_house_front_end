@@ -498,6 +498,12 @@ export default function ParentLogin() {
                 <span style="font-weight: 500;">₹${parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
               </div>
               ` : ""}
+              ${parseFloat(due.admission_fee) > 0 ? `
+              <div class="breakdown-row">
+                <span>Admission Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.admission_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
               ${parseFloat(due.discount_applied) > 0 ? `
               <div class="breakdown-row" style="color: #15803d; font-weight: 500;">
                 <span>Discount Applied Component:</span>
@@ -1012,11 +1018,6 @@ export default function ParentLogin() {
                           <div className="space-y-1 pt-2 border-t border-border/80 mt-2 text-xs text-muted-foreground">
                             <p className="flex items-center gap-1.5"><Calendar size={12} /> Born: {student.date_of_birth}</p>
                             <p className="flex items-center gap-1.5"><BookOpen size={12} /> Class: {student.class_name}</p>
-                            {student.discount_value && parseFloat(student.discount_value as string) > 0 && (
-                              <p className="flex items-center gap-1.5 text-emerald-600 font-medium">
-                                <TrendingDown size={12} /> Discount: {student.discount_value} {student.discount_type === "percentage" ? "%" : "INR"}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -1217,6 +1218,12 @@ export default function ParentLogin() {
                             <span>Resource Fee:</span>
                             <span className="font-medium text-foreground">₹{parseFloat(due.resource_fee).toLocaleString()}</span>
                           </div>
+                        )}
+                        {parseFloat(due.admission_fee || "0") > 0 && (
+                           <div className="flex justify-between text-muted-foreground">
+                             <span>Admission Fee:</span>
+                             <span className="font-medium text-foreground">₹{parseFloat(due.admission_fee).toLocaleString()}</span>
+                           </div>
                         )}
                         {parseFloat(due.discount_applied) > 0 && (
                           <div className="flex justify-between text-emerald-600 font-medium">

@@ -6,7 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import aspenLogo from "@/assets/aspen-logo.png";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 
-const baseNavLinks = [
+interface NavLinkItem {
+  label: string;
+  hash: string;
+  isNew?: boolean;
+}
+
+const baseNavLinks: NavLinkItem[] = [
   { label: "Home", hash: "#home" },
   { label: "About Us", hash: "#about" },
   { label: "Programs", hash: "#programs" },

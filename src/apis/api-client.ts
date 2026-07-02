@@ -44,6 +44,18 @@ export interface RoleAssignmentRequest {
   roles: string[];
 }
 
+export interface Student {
+  id: number;
+  admission_number: string;
+  student_name: string;
+  date_of_birth: string;
+  class_name: string;
+  academic_year: string;
+  joining_date: string;
+  parent_id: string;
+  is_active: boolean;
+}
+
 export interface StudentCreate {
   admission_number: string;
   student_name: string;
@@ -52,9 +64,6 @@ export interface StudentCreate {
   academic_year: string;
   joining_date: string;
   parent_id: string;
-  discount_type: "percentage" | "fixed" | null;
-  discount_value: number;
-  notes?: string;
   is_active: boolean;
 }
 
@@ -66,14 +75,6 @@ export interface StudentUpdate {
   academic_year?: string;
   joining_date?: string;
   parent_id?: string;
-  discount_type?: "percentage" | "fixed" | null;
-  discount_value?: number;
-  notes?: string;
-}
-
-export interface StudentDiscountUpdate {
-  discount_type: "percentage" | "fixed" | null;
-  discount_value: number;
 }
 
 export interface StudentResponse {
@@ -85,9 +86,6 @@ export interface StudentResponse {
   academic_year: string;
   joining_date: string;
   parent_id: string;
-  discount_type: "percentage" | "fixed" | null;
-  discount_value: string | number;
-  notes: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -114,6 +112,7 @@ export interface FeePlanCreate {
   program_type: string;
   tuition_fee: number;
   resource_fee: number;
+  admission_fee?: number;
   frequency: "monthly" | "quarterly" | "yearly";
   description?: string;
   is_active: boolean;
@@ -125,6 +124,7 @@ export interface FeePlanResponse {
   program_type: string;
   tuition_fee: string;
   resource_fee: string;
+  admission_fee: string;
   frequency: "monthly" | "quarterly" | "yearly";
   description: string;
   is_active: boolean;
@@ -136,6 +136,7 @@ export interface FeePlanUpdate {
   program_type: string;
   tuition_fee: number;
   resource_fee: number;
+  admission_fee?: number;
   frequency: "monthly" | "quarterly" | "yearly";
   description?: string;
   is_active: boolean;
@@ -147,6 +148,12 @@ export interface FeeRuleCreate {
   discount_value: number;
   applies_to: "monthly" | "quarterly" | "yearly";
   is_active: boolean;
+}export interface FeeRuleUpdate {
+  rule_name?: string;
+  discount_type?: "percentage" | "fixed";
+  discount_value?: number;
+  applies_to?: "monthly" | "quarterly" | "yearly";
+  is_active?: boolean;
 }
 
 export interface FeeRuleResponse {
@@ -165,6 +172,11 @@ export interface FeeAccountCreate {
   effective_from: string;
   is_active: boolean;
   installments?: number;
+  discount_type?: "percentage" | "fixed" | null;
+  discount_value?: number;
+  discount_mode?: "divided" | "first_term" | null;
+  notes?: string | null;
+  charge_admission_fee?: boolean;
 }
 
 export interface FeeAccountResponse {
@@ -175,6 +187,11 @@ export interface FeeAccountResponse {
   effective_from: string;
   is_active: boolean;
   installments: number;
+  discount_type?: "percentage" | "fixed" | null;
+  discount_value?: string;
+  discount_mode?: "divided" | "first_term" | null;
+  notes?: string | null;
+  charge_admission_fee: boolean;
   created_at: string;
 }
 
@@ -184,6 +201,11 @@ export interface FeeAccountUpdate {
   effective_from?: string;
   is_active?: boolean;
   installments?: number;
+  discount_type?: "percentage" | "fixed" | null;
+  discount_value?: number;
+  discount_mode?: "divided" | "first_term" | null;
+  notes?: string | null;
+  charge_admission_fee?: boolean;
 }
 
 export interface FeeDueGenerateRequest {
@@ -211,6 +233,7 @@ export interface FeeDueResponse {
   due_title: string;
   tuition_fee: string;
   resource_fee: string;
+  admission_fee: string;
   original_amount: string;
   discount_applied: string;
   final_amount: string;
@@ -547,10 +570,6 @@ export class APIClient {
     return this.request<StudentResponse>("PATCH", `/api/v1/admin/students/${studentId}/activate`);
   }
 
-  public async updateStudentDiscount(studentId: number, req: StudentDiscountUpdate): Promise<StudentResponse> {
-    return this.request<StudentResponse>("PATCH", `/api/v1/admin/students/${studentId}/discount`, req);
-  }
-
   public async getFeePlans(): Promise<FeePlanResponse[]> {
     return this.request<FeePlanResponse[]>("GET", "/api/v1/admin/fee-plans");
   }
@@ -573,6 +592,14 @@ export class APIClient {
 
   public async createFeeRule(req: FeeRuleCreate): Promise<FeeRuleResponse> {
     return this.request<FeeRuleResponse>("POST", "/api/v1/admin/fee-rules", req);
+  }
+
+  public async updateFeeRule(ruleId: number, req: FeeRuleUpdate): Promise<FeeRuleResponse> {
+    return this.request<FeeRuleResponse>("PUT", `/api/v1/admin/fee-rules/${ruleId}`, req);
+  }
+
+  public async toggleFeeRuleActive(ruleId: number): Promise<FeeRuleResponse> {
+    return this.request<FeeRuleResponse>("PATCH", `/api/v1/admin/fee-rules/${ruleId}/toggle`);
   }
 
   public async getFeeRules(): Promise<FeeRuleResponse[]> {

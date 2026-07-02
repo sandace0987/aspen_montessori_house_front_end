@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { motion, AnimatePresence } from "framer-motion";
@@ -87,12 +87,12 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [duesPage, setDuesPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
-  const [hideInactiveStudents, setHideInactiveStudents] = useState(false);
-  const [hideInactiveParents, setHideInactiveParents] = useState(false);
-  const [hideInactiveAdmins, setHideInactiveAdmins] = useState(false);
-  const [hideInactivePlans, setHideInactivePlans] = useState(false);
-  const [hideInactiveRules, setHideInactiveRules] = useState(false);
-  const [hideInactiveAccounts, setHideInactiveAccounts] = useState(false);
+  const [hideInactiveStudents, setHideInactiveStudents] = useState(true);
+  const [hideInactiveParents, setHideInactiveParents] = useState(true);
+  const [hideInactiveAdmins, setHideInactiveAdmins] = useState(true);
+  const [hideInactivePlans, setHideInactivePlans] = useState(true);
+  const [hideInactiveRules, setHideInactiveRules] = useState(true);
+  const [hideInactiveAccounts, setHideInactiveAccounts] = useState(true);
   const [studentSearch, setStudentSearch] = useState("");
   const [classFilter, setClassFilter] = useState("All");
   const [yearFilter, setYearFilter] = useState("All");
@@ -163,10 +163,7 @@ export default function AdminDashboard() {
     class_name: "Montessori-1",
     academic_year: "2026-2027",
     joining_date: new Date().toISOString().split("T")[0],
-    parent_id: "",
-    discount_type: "percentage" as "percentage" | "fixed" | null,
-    discount_value: 0,
-    notes: ""
+    parent_id: ""
   });
 
   // Parent form
@@ -194,6 +191,7 @@ export default function AdminDashboard() {
     program_type: "",
     tuition_fee: 0,
     resource_fee: 0,
+    admission_fee: 0,
     frequency: "quarterly" as "monthly" | "quarterly" | "yearly",
     description: ""
   });
@@ -206,6 +204,9 @@ export default function AdminDashboard() {
     applies_to: "yearly" as "monthly" | "quarterly" | "yearly",
     is_active: true
   });
+  const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
+  const [studentSelectSearch, setStudentSelectSearch] = useState("");
+  const [subscriptionSelectSearch, setSubscriptionSelectSearch] = useState("");
 
   // Student Fee Account subscription form
   const [accountForm, setAccountForm] = useState({
@@ -213,7 +214,12 @@ export default function AdminDashboard() {
     fee_plan_id: 0,
     payment_cycle: "quarterly" as "monthly" | "quarterly" | "yearly",
     effective_from: new Date().toISOString().split("T")[0],
-    installments: 3
+    installments: 3,
+    discount_type: "" as "" | "fixed" | "percentage",
+    discount_value: 0,
+    discount_mode: "divided" as "divided" | "first_term",
+    notes: "",
+    charge_admission_fee: false
   });
 
   // Fee dues generator form
@@ -260,6 +266,19 @@ export default function AdminDashboard() {
   const [graduateChecked, setGraduateChecked] = useState(false);
   const [transitionSearchQuery, setTransitionSearchQuery] = useState("");
   const [transitionClassFilter, setTransitionClassFilter] = useState("All");
+
+  const transitionStudentsWithUnpaidDues = useMemo(() => {
+    return selectedTransitionStudentIds.map(studentId => {
+      const student = students.find(s => s.id === studentId);
+      const studentUnpaidDues = openDues.filter(d => d.student_id === studentId);
+      const totalBalance = studentUnpaidDues.reduce((sum, d) => sum + parseFloat(d.balance), 0);
+      return {
+        student,
+        unpaidDuesCount: studentUnpaidDues.length,
+        totalBalance
+      };
+    }).filter(item => item.totalBalance > 0);
+  }, [selectedTransitionStudentIds, openDues, students]);
 
 
   // Fetch all administrative records
@@ -512,16 +531,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      if (studentForm.discount_value < 0) {
-        toast.error("Discount value cannot be negative.");
-        return;
-      }
-
-      if (studentForm.discount_type === "percentage" && studentForm.discount_value > 100) {
-        toast.error("Percentage discount cannot exceed 100%.");
-        return;
-      }
-
       if (editingStudentId) {
         await api.updateStudent(editingStudentId, {
           admission_number: admissionClean,
@@ -530,10 +539,7 @@ export default function AdminDashboard() {
           class_name: studentForm.class_name,
           academic_year: studentForm.academic_year,
           joining_date: studentForm.joining_date,
-          parent_id: studentForm.parent_id,
-          discount_type: studentForm.discount_value > 0 ? studentForm.discount_type : null,
-          discount_value: studentForm.discount_value,
-          notes: studentForm.notes.trim()
+          parent_id: studentForm.parent_id
         });
         toast.success("Student profile updated successfully!");
         setEditingStudentId(null);
@@ -546,9 +552,6 @@ export default function AdminDashboard() {
           academic_year: studentForm.academic_year,
           joining_date: studentForm.joining_date,
           parent_id: studentForm.parent_id,
-          discount_type: studentForm.discount_value > 0 ? studentForm.discount_type : null,
-          discount_value: studentForm.discount_value,
-          notes: studentForm.notes.trim(),
           is_active: true
         });
         toast.success("Student onboarded successfully!");
@@ -562,10 +565,7 @@ export default function AdminDashboard() {
         class_name: "Montessori-1",
         academic_year: "2026-2027",
         joining_date: new Date().toISOString().split("T")[0],
-        parent_id: "",
-        discount_type: "percentage",
-        discount_value: 0,
-        notes: ""
+        parent_id: ""
       });
     } catch (err: any) {
       toast.error(err.message || "Failed to onboard student profile.");
@@ -725,6 +725,7 @@ export default function AdminDashboard() {
           program_type: planForm.program_type,
           tuition_fee: planForm.tuition_fee,
           resource_fee: planForm.resource_fee,
+          admission_fee: planForm.admission_fee,
           frequency: planForm.frequency,
           description: planForm.description,
           is_active: true
@@ -737,6 +738,7 @@ export default function AdminDashboard() {
           program_type: planForm.program_type,
           tuition_fee: planForm.tuition_fee,
           resource_fee: planForm.resource_fee,
+          admission_fee: planForm.admission_fee,
           frequency: planForm.frequency,
           description: planForm.description,
           is_active: true
@@ -751,6 +753,7 @@ export default function AdminDashboard() {
         program_type: "",
         tuition_fee: 0,
         resource_fee: 0,
+        admission_fee: 0,
         frequency: "quarterly",
         description: ""
       });
@@ -783,8 +786,8 @@ export default function AdminDashboard() {
   };
 
 
-  // Create fee rule action
-  const handleCreateRule = async (e: React.FormEvent) => {
+  // Create or update fee rule action
+  const handleSaveRule = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (!ruleForm.rule_name || ruleForm.discount_value < 0) {
@@ -792,18 +795,30 @@ export default function AdminDashboard() {
         return;
       }
 
-      await api.createFeeRule({
-        rule_name: ruleForm.rule_name,
-        discount_type: ruleForm.discount_type,
-        discount_value: ruleForm.discount_value,
-        applies_to: ruleForm.applies_to,
-        is_active: ruleForm.is_active
-      });
+      if (editingRuleId !== null) {
+        await api.updateFeeRule(editingRuleId, {
+          rule_name: ruleForm.rule_name,
+          discount_type: ruleForm.discount_type,
+          discount_value: ruleForm.discount_value,
+          applies_to: ruleForm.applies_to,
+          is_active: ruleForm.is_active
+        });
+        toast.success("Fee discount rule successfully updated!");
+      } else {
+        await api.createFeeRule({
+          rule_name: ruleForm.rule_name,
+          discount_type: ruleForm.discount_type,
+          discount_value: ruleForm.discount_value,
+          applies_to: ruleForm.applies_to,
+          is_active: ruleForm.is_active
+        });
+        toast.success("Fee discount rule successfully registered!");
+      }
 
-      toast.success("Fee discount rule successfully registered!");
       fetchAllData();
 
       // Reset
+      setEditingRuleId(null);
       setRuleForm({
         rule_name: "",
         discount_type: "fixed",
@@ -813,6 +828,16 @@ export default function AdminDashboard() {
       });
     } catch (err: any) {
       toast.error(err.message || "Failed to save fee rule.");
+    }
+  };
+
+  const handleToggleRuleActive = async (ruleId: number) => {
+    try {
+      await api.toggleFeeRuleActive(ruleId);
+      toast.success("Fee rule status toggled successfully!");
+      fetchAllData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to toggle fee rule status.");
     }
   };
 
@@ -830,7 +855,12 @@ export default function AdminDashboard() {
           payment_cycle: accountForm.payment_cycle,
           effective_from: accountForm.effective_from,
           is_active: true,
-          installments: accountForm.payment_cycle === "quarterly" ? accountForm.installments : undefined
+          installments: accountForm.payment_cycle === "quarterly" ? accountForm.installments : undefined,
+          discount_type: accountForm.discount_type || null,
+          discount_value: accountForm.discount_type ? Number(accountForm.discount_value) : 0,
+          discount_mode: accountForm.discount_type === "fixed" ? accountForm.discount_mode : null,
+          notes: accountForm.notes || null,
+          charge_admission_fee: accountForm.charge_admission_fee
         });
         toast.success("Subscription updated successfully!");
         setEditingAccountId(null);
@@ -841,11 +871,27 @@ export default function AdminDashboard() {
           payment_cycle: accountForm.payment_cycle,
           effective_from: accountForm.effective_from,
           is_active: true,
-          installments: accountForm.payment_cycle === "quarterly" ? accountForm.installments : 3
+          installments: accountForm.payment_cycle === "quarterly" ? accountForm.installments : 3,
+          discount_type: accountForm.discount_type || null,
+          discount_value: accountForm.discount_type ? Number(accountForm.discount_value) : 0,
+          discount_mode: accountForm.discount_type === "fixed" ? accountForm.discount_mode : null,
+          notes: accountForm.notes || null,
+          charge_admission_fee: accountForm.charge_admission_fee
         });
         toast.success("Student fee account linked successfully!");
       }
-      setAccountForm({ student_id: 0, fee_plan_id: 0, payment_cycle: "quarterly", effective_from: new Date().toISOString().split("T")[0], installments: 3 });
+      setAccountForm({
+        student_id: 0,
+        fee_plan_id: 0,
+        payment_cycle: "quarterly",
+        effective_from: new Date().toISOString().split("T")[0],
+        installments: 3,
+        discount_type: "",
+        discount_value: 0,
+        discount_mode: "divided",
+        notes: "",
+        charge_admission_fee: false
+      });
       fetchAllData();
     } catch (err: any) {
       toast.error(err.message || "Linking fee plan failed.");
@@ -931,17 +977,24 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete Student Fee Account Subscription
-  const handleDeleteSubscription = async (accountId: number) => {
-    if (!window.confirm("Are you sure you want to permanently delete this student fee subscription? This will automatically delete all associated unpaid dues/installments. This action cannot be undone.")) {
+  // Toggle Student Fee Account Subscription Active/Inactive Status
+  const handleToggleSubscriptionActive = async (account: FeeAccountResponse) => {
+    const actionText = account.is_active ? "deactivate" : "activate";
+    if (!window.confirm(`Are you sure you want to ${actionText} this student fee subscription?`)) {
       return;
     }
     try {
-      await api.deleteFeeAccount(accountId);
-      toast.success("Fee subscription deleted successfully!");
+      await api.updateFeeAccount(account.id, {
+        fee_plan_id: account.fee_plan_id,
+        payment_cycle: account.payment_cycle,
+        effective_from: account.effective_from,
+        is_active: !account.is_active,
+        installments: account.installments
+      });
+      toast.success(`Fee subscription ${account.is_active ? "deactivated" : "activated"} successfully!`);
       fetchAllData();
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete fee subscription.");
+      toast.error(err.message || `Failed to ${actionText} fee subscription.`);
     }
   };
 
@@ -1050,6 +1103,12 @@ export default function AdminDashboard() {
               <div class="breakdown-row">
                 <span>Resource Fee Component:</span>
                 <span style="font-weight: 500;">₹${parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              ${parseFloat(due.admission_fee) > 0 ? `
+              <div class="breakdown-row">
+                <span>Admission Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.admission_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
               </div>
               ` : ""}
               ${parseFloat(due.discount_applied) > 0 ? `
@@ -1856,42 +1915,6 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div className="border-t border-dashed border-border pt-3 mt-3 grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Discount Type</label>
-                          <select
-                            value={studentForm.discount_type || ""}
-                            onChange={(e) => setStudentForm({ ...studentForm, discount_type: e.target.value ? e.target.value as any : null })}
-                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                          >
-                            <option value="">None</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Sum (INR)</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Discount Value</label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={studentForm.discount_value || ""}
-                            onChange={(e) => setStudentForm({ ...studentForm, discount_value: parseFloat(e.target.value) || 0 })}
-                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Custom Notes</label>
-                        <textarea
-                          rows={2}
-                          value={studentForm.notes}
-                          onChange={(e) => setStudentForm({ ...studentForm, notes: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none resize-none"
-                          placeholder="e.g. Elder sibling discount applied"
-                        />
-                      </div>
-
                       <div className="flex gap-2">
                         <button
                           type="submit"
@@ -1911,10 +1934,7 @@ export default function AdminDashboard() {
                                 class_name: "Montessori-1",
                                 academic_year: "2026-2027",
                                 joining_date: new Date().toISOString().split("T")[0],
-                                parent_id: "",
-                                discount_type: "percentage",
-                                discount_value: 0,
-                                notes: ""
+                                parent_id: ""
                               });
                             }}
                             className="px-4 py-2.5 rounded-full bg-muted text-muted-foreground font-semibold text-xs hover:bg-muted/80 transition-all"
@@ -1985,7 +2005,6 @@ export default function AdminDashboard() {
                               ))}
                             </select>
                           </th>
-                          <th className="pb-3">Discounts</th>
                           <th className="pb-3">Status</th>
                           <th className="pb-3 text-right">Actions</th>
                         </tr>
@@ -2014,13 +2033,7 @@ export default function AdminDashboard() {
                             <td className="py-3 text-foreground">{student.student_name}</td>
                             <td className="py-3 text-muted-foreground">{student.class_name}</td>
                             <td className="py-3 text-muted-foreground">{student.academic_year}</td>
-                            <td className="py-3 text-emerald-600 font-medium">
-                              {student.discount_value && parseFloat(student.discount_value as string) > 0 ? (
-                                <span>{student.discount_value} {student.discount_type === "percentage" ? "%" : "INR"}</span>
-                              ) : (
-                                <span className="text-muted-foreground">None</span>
-                              )}
-                            </td>
+
                             <td className="py-3">
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${student.is_active
                                 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
@@ -2041,10 +2054,7 @@ export default function AdminDashboard() {
                                       class_name: student.class_name,
                                       academic_year: student.academic_year,
                                       joining_date: student.joining_date,
-                                      parent_id: student.parent_id,
-                                      discount_type: student.discount_type as any,
-                                      discount_value: parseFloat(student.discount_value as string) || 0,
-                                      notes: student.notes || ""
+                                      parent_id: student.parent_id
                                     });
                                   }}
                                   className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
@@ -2670,7 +2680,7 @@ export default function AdminDashboard() {
                           placeholder="Auto-filled from class"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Tuition Fee (₹)</label>
                           <input
@@ -2689,6 +2699,16 @@ export default function AdminDashboard() {
                             min="0"
                             value={planForm.resource_fee || ""}
                             onChange={(e) => setPlanForm({ ...planForm, resource_fee: parseFloat(e.target.value) || 0 })}
+                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Admission Fee (₹)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={planForm.admission_fee || ""}
+                            onChange={(e) => setPlanForm({ ...planForm, admission_fee: parseFloat(e.target.value) || 0 })}
                             className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
                           />
                         </div>
@@ -2742,6 +2762,7 @@ export default function AdminDashboard() {
                                 program_type: "",
                                 tuition_fee: 0,
                                 resource_fee: 0,
+                                admission_fee: 0,
                                 frequency: "quarterly",
                                 description: ""
                               });
@@ -2793,6 +2814,7 @@ export default function AdminDashboard() {
                           <th className="pb-3">Prog. Type</th>
                           <th className="pb-3">Tuition Fee</th>
                           <th className="pb-3">Resource Fee</th>
+                          <th className="pb-3">Admission Fee</th>
                           <th className="pb-3">Frequency</th>
                           <th className="pb-3">Status</th>
                           <th className="pb-3 text-right">Actions</th>
@@ -2813,6 +2835,7 @@ export default function AdminDashboard() {
                             <td className="py-3 text-muted-foreground font-mono">{plan.program_type}</td>
                             <td className="py-3 text-foreground font-medium">₹{parseFloat(plan.tuition_fee).toLocaleString()}</td>
                             <td className="py-3 text-foreground font-medium">₹{parseFloat(plan.resource_fee).toLocaleString()}</td>
+                            <td className="py-3 text-foreground font-medium">₹{parseFloat(plan.admission_fee || "0").toLocaleString()}</td>
                             <td className="py-3 font-semibold capitalize text-primary">{plan.frequency}</td>
                             <td className="py-3">
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${plan.is_active
@@ -2832,6 +2855,7 @@ export default function AdminDashboard() {
                                       program_type: plan.program_type,
                                       tuition_fee: parseFloat(plan.tuition_fee) || 0,
                                       resource_fee: parseFloat(plan.resource_fee) || 0,
+                                      admission_fee: parseFloat(plan.admission_fee || "0") || 0,
                                       frequency: plan.frequency as any,
                                       description: plan.description || ""
                                     });
@@ -2879,12 +2903,13 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-                    {/* Create Fee Rule Form */}
+                    {/* Create/Edit Fee Rule Form */}
                     <div className="lg:col-span-1 bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
                       <h3 className="font-semibold text-foreground flex items-center gap-1.5">
-                        <Plus size={16} className="text-primary" /> Create discount rule
+                        {editingRuleId !== null ? <Pencil size={16} className="text-primary" /> : <Plus size={16} className="text-primary" />}
+                        {editingRuleId !== null ? "Edit discount rule" : "Create discount rule"}
                       </h3>
-                      <form onSubmit={handleCreateRule} className="space-y-3">
+                      <form onSubmit={handleSaveRule} className="space-y-3">
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Rule Name</label>
                           <input
@@ -2954,8 +2979,27 @@ export default function AdminDashboard() {
                           type="submit"
                           className="w-full py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 mt-2"
                         >
-                          <Plus size={14} /> Create Rule
+                          {editingRuleId !== null ? <Save size={14} /> : <Plus size={14} />}
+                          {editingRuleId !== null ? "Save Rule" : "Create Rule"}
                         </button>
+                        {editingRuleId !== null && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingRuleId(null);
+                              setRuleForm({
+                                rule_name: "",
+                                discount_type: "fixed",
+                                discount_value: 0,
+                                applies_to: "yearly",
+                                is_active: true
+                              });
+                            }}
+                            className="w-full py-2 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-xs transition-all mt-1"
+                          >
+                            Cancel Edit
+                          </button>
+                        )}
                       </form>
                     </div>
 
@@ -3016,6 +3060,7 @@ export default function AdminDashboard() {
                                 <th className="pb-3">Value</th>
                                 <th className="pb-3">Applies To</th>
                                 <th className="pb-3">Status</th>
+                                <th className="pb-3 text-right pr-3">Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -3031,6 +3076,37 @@ export default function AdminDashboard() {
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${rule.is_active ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
                                       {rule.is_active ? "Active" : "Inactive"}
                                     </span>
+                                  </td>
+                                  <td className="py-3 text-right pr-3">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        onClick={() => {
+                                          setEditingRuleId(rule.id);
+                                          setRuleForm({
+                                            rule_name: rule.rule_name,
+                                            discount_type: rule.discount_type,
+                                            discount_value: parseFloat(rule.discount_value),
+                                            applies_to: (rule.applies_to || "yearly") as any,
+                                            is_active: rule.is_active
+                                          });
+                                        }}
+                                        className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary p-1.5 rounded-full transition-all"
+                                        title="Edit Rule"
+                                      >
+                                        <Pencil size={12} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleToggleRuleActive(rule.id)}
+                                        className={`p-1.5 rounded-full transition-all ${
+                                          rule.is_active
+                                            ? "text-amber-600 hover:text-amber-800 bg-amber-500/10 hover:bg-amber-500/20"
+                                            : "text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
+                                        }`}
+                                        title={rule.is_active ? "Inactivate Rule" : "Activate Rule"}
+                                      >
+                                        {rule.is_active ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -3067,6 +3143,15 @@ export default function AdminDashboard() {
                     <form onSubmit={handleLinkAccount} className="space-y-3">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Student</label>
+                        {!editingAccountId && (
+                          <input
+                            type="text"
+                            placeholder="🔍 Type to search student..."
+                            value={studentSelectSearch}
+                            onChange={(e) => setStudentSelectSearch(e.target.value)}
+                            className="w-full px-3 py-1.5 mb-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                          />
+                        )}
                         <select
                           required
                           disabled={!!editingAccountId}
@@ -3083,7 +3168,15 @@ export default function AdminDashboard() {
                           className={`w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none ${editingAccountId ? "opacity-60 cursor-not-allowed" : ""}`}
                         >
                           <option value="0">Select Student</option>
-                          {students.filter(s => s.is_active !== false).map(s => (
+                          {students.filter(s => {
+                            const activeCheck = s.is_active !== false;
+                            if (!activeCheck) return false;
+                            const q = studentSelectSearch.toLowerCase().trim();
+                            if (!q) return true;
+                            return s.student_name.toLowerCase().includes(q) ||
+                              s.admission_number.toLowerCase().includes(q) ||
+                              s.class_name.toLowerCase().includes(q);
+                          }).map(s => (
                             <option key={s.id} value={s.id}>{s.student_name} [{s.admission_number}] (Class: {s.class_name})</option>
                           ))}
                         </select>
@@ -3182,6 +3275,81 @@ export default function AdminDashboard() {
                         />
                       </div>
 
+                      <div className="flex items-center gap-2 py-1.5">
+                        <input
+                          id="charge-admission-fee-checkbox"
+                          type="checkbox"
+                          checked={accountForm.charge_admission_fee}
+                          onChange={(e) => setAccountForm({ ...accountForm, charge_admission_fee: e.target.checked })}
+                          className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
+                        />
+                        <label htmlFor="charge-admission-fee-checkbox" className="text-xs font-semibold text-foreground select-none cursor-pointer">
+                          Charge One-time Admission Fee (First Term only)
+                        </label>
+                      </div>
+
+                      <div className="p-3 bg-muted/40 rounded-2xl border border-border/50 space-y-2">
+                        <label className="block text-xs font-bold text-foreground">Select Discount Rule (Sibling / Special)</label>
+                        <div>
+                          <select
+                            value={(() => {
+                              const matched = feeRules.find(r => r.discount_type === accountForm.discount_type && parseFloat(r.discount_value) === accountForm.discount_value);
+                              return matched ? matched.id : "";
+                            })()}
+                            onChange={(e) => {
+                              const ruleId = Number(e.target.value);
+                              const selectedRule = feeRules.find(r => r.id === ruleId);
+                              if (selectedRule) {
+                                setAccountForm({
+                                  ...accountForm,
+                                  discount_type: selectedRule.discount_type as any,
+                                  discount_value: parseFloat(selectedRule.discount_value) || 0,
+                                  notes: selectedRule.rule_name
+                                });
+                              } else {
+                                setAccountForm({
+                                  ...accountForm,
+                                  discount_type: "",
+                                  discount_value: 0,
+                                  notes: ""
+                                });
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                          >
+                            <option value="">No Discount</option>
+                            {feeRules.filter(r => r.is_active && r.applies_to !== "yearly" && r.rule_name !== "full_year_discount" && r.rule_name !== "Full Year Discount").map(r => (
+                              <option key={r.id} value={r.id}>
+                                {r.rule_name} ({r.discount_type === "fixed" ? `₹${parseFloat(r.discount_value).toLocaleString()}` : `${parseFloat(r.discount_value)}%`})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {accountForm.discount_type === "fixed" && (
+                          <div>
+                            <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Discount Application Mode</label>
+                            <select
+                              value={accountForm.discount_mode}
+                              onChange={(e) => setAccountForm({ ...accountForm, discount_mode: e.target.value as any })}
+                              className="w-full px-2.5 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none font-medium"
+                            >
+                              <option value="divided">Proportional / Divided across terms</option>
+                              <option value="first_term">Apply fully on Term 1 only</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {accountForm.discount_type && (
+                          <div>
+                            <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Discount Value & Reason</label>
+                            <div className="text-[11px] font-semibold text-primary px-2.5 py-1.5 bg-muted rounded-xl border border-border/30">
+                              {accountForm.discount_type === "fixed" ? `₹${accountForm.discount_value.toLocaleString()}` : `${accountForm.discount_value}%`} — {accountForm.notes}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] text-muted-foreground space-y-1">
                         <p className="font-semibold text-primary">Validation Rule check:</p>
                         <p>• Student class and plan class MUST be identical.</p>
@@ -3193,7 +3361,18 @@ export default function AdminDashboard() {
                           type="button"
                           onClick={() => {
                             setEditingAccountId(null);
-                            setAccountForm({ student_id: 0, fee_plan_id: 0, payment_cycle: "quarterly", effective_from: new Date().toISOString().split("T")[0], installments: 3 });
+                            setAccountForm({
+                              student_id: 0,
+                              fee_plan_id: 0,
+                              payment_cycle: "quarterly",
+                              effective_from: new Date().toISOString().split("T")[0],
+                              installments: 3,
+                              discount_type: "",
+                              discount_value: 0,
+                              discount_mode: "divided",
+                              notes: "",
+                              charge_admission_fee: false
+                            });
                           }}
                           className="w-full py-2 rounded-full bg-muted text-muted-foreground font-semibold text-xs hover:bg-muted/80 transition-all flex items-center justify-center gap-1.5 mb-2"
                         >
@@ -3253,7 +3432,7 @@ export default function AdminDashboard() {
                       <tbody>
                         {feeAccounts.filter((account) => {
                           const studentObj = students.find(s => s.id === account.student_id);
-                          const matchesActive = !hideInactiveAccounts || studentObj?.is_active !== false;
+                          const matchesActive = !hideInactiveAccounts || (studentObj?.is_active !== false && account.is_active !== false);
 
                           const query = accountSearch.toLowerCase().trim();
                           const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "";
@@ -3270,8 +3449,25 @@ export default function AdminDashboard() {
                           const studentName = studentObj ? `${studentObj.student_name} [${studentObj.admission_number}]` : "Unknown Student";
                           const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "Unknown Plan";
                           return (
-                            <tr key={account.id} className={`border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors ${editingAccountId === account.id ? "bg-primary/5 ring-1 ring-primary/20" : ""}`}>
-                              <td className="py-3 text-foreground">{studentName}</td>
+                            <tr key={account.id} className={`border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors ${editingAccountId === account.id ? "bg-primary/5 ring-1 ring-primary/20" : ""} ${!account.is_active ? "opacity-60 bg-muted/10" : ""}`}>
+                              <td className="py-3 text-foreground">
+                                <span className="font-medium">{studentName}</span>
+                                {account.discount_type && account.discount_value && parseFloat(account.discount_value as any) > 0 && (
+                                  <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20" title={`${account.notes || "Subscription discount applied"} (${account.discount_mode === "first_term" ? "Term 1 only" : "Divided"})`}>
+                                    🏷️ {parseFloat(account.discount_value as any).toLocaleString()}{account.discount_type === "percentage" ? "%" : " INR"} Off
+                                  </span>
+                                )}
+                                {account.charge_admission_fee && (
+                                  <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20" title="Includes one-time Admission Fee in Term 1">
+                                    ➕ Admission Fee
+                                  </span>
+                                )}
+                                {!account.is_active && (
+                                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/10">
+                                    Inactive
+                                  </span>
+                                )}
+                              </td>
                               <td className="py-3 text-muted-foreground">{planName}</td>
                               <td className="py-3 text-muted-foreground">{account.effective_from}</td>
                               <td className="py-3 font-semibold capitalize text-primary">
@@ -3287,7 +3483,12 @@ export default function AdminDashboard() {
                                         fee_plan_id: account.fee_plan_id,
                                         payment_cycle: account.payment_cycle,
                                         effective_from: account.effective_from,
-                                        installments: account.installments || 3
+                                        installments: account.installments || 3,
+                                        discount_type: (account.discount_type || "") as any,
+                                        discount_value: parseFloat(account.discount_value || "0") || 0,
+                                        discount_mode: (account.discount_mode || "divided") as any,
+                                        notes: account.notes || "",
+                                        charge_admission_fee: account.charge_admission_fee || false
                                       });
                                     }}
                                     className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
@@ -3312,11 +3513,15 @@ export default function AdminDashboard() {
                                     <PlusCircle size={13} />
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteSubscription(account.id)}
-                                    className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors"
-                                    title="Delete subscription"
+                                    onClick={() => handleToggleSubscriptionActive(account)}
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      account.is_active
+                                        ? "hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500"
+                                        : "hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500"
+                                    }`}
+                                    title={account.is_active ? "Deactivate subscription" : "Activate subscription"}
                                   >
-                                    <Trash2 size={13} />
+                                    {account.is_active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                                   </button>
                                 </div>
                               </td>
@@ -3353,6 +3558,13 @@ export default function AdminDashboard() {
                     <form onSubmit={handleGenerateDues} className="space-y-3">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Student Fee Subscription</label>
+                        <input
+                          type="text"
+                          placeholder="🔍 Type to search subscription..."
+                          value={subscriptionSelectSearch}
+                          onChange={(e) => setSubscriptionSelectSearch(e.target.value)}
+                          className="w-full px-3 py-1.5 mb-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
+                        />
                         <select
                           required
                           value={generateForm.fee_account_id}
@@ -3368,7 +3580,16 @@ export default function AdminDashboard() {
                           <option value="0">Select Fee Subscription Account</option>
                           {feeAccounts.filter(a => {
                             const student = students.find(s => s.id === a.student_id);
-                            return student && student.is_active !== false && a.is_active !== false;
+                            const activeCheck = student && student.is_active !== false && a.is_active !== false;
+                            if (!activeCheck) return false;
+
+                            const q = subscriptionSelectSearch.toLowerCase().trim();
+                            if (!q) return true;
+
+                            const name = student.student_name.toLowerCase();
+                            const adm = student.admission_number.toLowerCase();
+                            const cycle = a.payment_cycle.toLowerCase();
+                            return name.includes(q) || adm.includes(q) || cycle.includes(q);
                           }).map(a => {
                             const sObj = students.find(s => s.id === a.student_id);
                             const name = sObj ? `${sObj.student_name} [${sObj.admission_number}]` : "Student";
@@ -3469,13 +3690,12 @@ export default function AdminDashboard() {
                     <table className="w-full text-xs md:text-sm">
                       <thead>
                         <tr className="border-b border-border text-muted-foreground text-left text-[10px] font-bold uppercase tracking-wider">
-                          <th className="pb-3">Title / Period</th>
-                          <th className="pb-3">Final Sum</th>
-                          <th className="pb-3">Discount</th>
-                          <th className="pb-3">Paid</th>
-                          <th className="pb-3">Balance</th>
-                          <th className="pb-3 text-right">Status</th>
-                          <th className="pb-3 text-right pr-3">Actions</th>
+                          <th className="pb-3 whitespace-nowrap">Title / Period</th>
+                          <th className="pb-3 whitespace-nowrap">Billed (Net)</th>
+                          <th className="pb-3 whitespace-nowrap">Paid</th>
+                          <th className="pb-3 whitespace-nowrap">Balance</th>
+                          <th className="pb-3 text-right whitespace-nowrap">Status</th>
+                          <th className="pb-3 text-right pr-3 whitespace-nowrap">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3505,7 +3725,7 @@ export default function AdminDashboard() {
                           if (paginatedGroups.length === 0) {
                             return (
                               <tr>
-                                <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs">
+                                <td colSpan={6} className="py-8 text-center text-muted-foreground text-xs">
                                   No outstanding dues match your search.
                                 </td>
                               </tr>
@@ -3526,7 +3746,7 @@ export default function AdminDashboard() {
                                     }));
                                   }}
                                 >
-                                  <td colSpan={7} className="py-2.5 px-3 font-semibold text-primary text-[10px] uppercase tracking-wider text-left select-none">
+                                  <td colSpan={6} className="py-2.5 px-3 font-semibold text-primary text-[10px] uppercase tracking-wider text-left select-none">
                                     <div className="flex items-center gap-1.5">
                                       {isExpanded ? <ChevronDown size={14} className="text-primary" /> : <ChevronRight size={14} className="text-muted-foreground" />}
                                       <span>👤 {group.studentName}</span>
@@ -3558,8 +3778,16 @@ export default function AdminDashboard() {
                                       <p className="font-semibold text-foreground truncate max-w-[180px]" title={due.due_title}>{due.due_title}</p>
                                       <p className="text-[9px] text-muted-foreground font-mono">Due ID: {due.id}</p>
                                     </td>
-                                    <td className="py-3 font-semibold text-foreground">₹{parseFloat(due.final_amount).toLocaleString()}</td>
-                                    <td className="py-3 text-emerald-600 font-medium">-₹{parseFloat(due.discount_applied).toLocaleString()}</td>
+                                    <td className="py-3 font-semibold text-foreground">
+                                      <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
+                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0) && (
+                                        <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
+                                          ₹{parseFloat(due.original_amount).toLocaleString()}
+                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
+                                          {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
+                                        </div>
+                                      )}
+                                    </td>
                                     <td className="py-3 text-muted-foreground">₹{parseFloat(due.paid_amount).toLocaleString()}</td>
                                     <td className="py-3 font-bold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
                                     <td className="py-3 text-right pr-3">
@@ -4168,6 +4396,28 @@ export default function AdminDashboard() {
                             You are transitioning <strong className="text-foreground">{selectedTransitionStudentIds.length}</strong> selected student(s). Their current class subscription fee accounts will be automatically deactivated and carry-forward subscriptions will be created for the new class.
                           </p>
 
+                          {transitionStudentsWithUnpaidDues.length > 0 && (
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                              <div className="flex items-start gap-2.5">
+                                <AlertCircle className="shrink-0 mt-0.5" size={16} />
+                                <div>
+                                  <strong className="block font-semibold">Outstanding Balance Warning:</strong>
+                                  <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-400">
+                                    The following student(s) have unpaid or partially paid installment dues that will remain outstanding:
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="max-h-[100px] overflow-y-auto space-y-1.5 mt-1 pl-6">
+                                {transitionStudentsWithUnpaidDues.map((item) => (
+                                  <div key={item.student?.id} className="flex justify-between text-[11px] font-medium border-b border-amber-500/10 pb-1 last:border-0 last:pb-0">
+                                    <span>• {item.student?.student_name}</span>
+                                    <span>₹{item.totalBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           <div>
                             <label className="block text-xs font-semibold text-muted-foreground mb-1">Target Class / Program</label>
                             <select
@@ -4254,6 +4504,28 @@ export default function AdminDashboard() {
                             </p>
                           </div>
 
+                          {transitionStudentsWithUnpaidDues.length > 0 && (
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                              <div className="flex items-start gap-2.5">
+                                <AlertCircle className="shrink-0 mt-0.5" size={16} />
+                                <div>
+                                  <strong className="block font-semibold">Outstanding Balance Warning:</strong>
+                                  <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-400">
+                                    The following student(s) have unpaid or partially paid installment dues that will remain outstanding:
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="max-h-[100px] overflow-y-auto space-y-1.5 mt-1 pl-6">
+                                {transitionStudentsWithUnpaidDues.map((item) => (
+                                  <div key={item.student?.id} className="flex justify-between text-[11px] font-medium border-b border-amber-500/10 pb-1 last:border-0 last:pb-0">
+                                    <span>• {item.student?.student_name}</span>
+                                    <span>₹{item.totalBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           <label className="flex items-center gap-2 cursor-pointer select-none">
                             <input
                               type="checkbox"
@@ -4322,7 +4594,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Banner/Header */}
-              <div className="bg-gradient-to-r from-amber-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+              <div className="bg-gradient-to-r from-amber-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
                   {selectedStudentForView.student_name[0]}
                 </div>
@@ -4366,16 +4638,7 @@ export default function AdminDashboard() {
                       <p className="text-muted-foreground mb-1">Joining Date</p>
                       <p className="font-semibold text-foreground">{selectedStudentForView.joining_date || "N/A"}</p>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">Student Concessions</p>
-                      <p className="font-semibold text-emerald-600">
-                        {selectedStudentForView.discount_value && parseFloat(selectedStudentForView.discount_value as string) > 0 ? (
-                          `${selectedStudentForView.discount_value} ${selectedStudentForView.discount_type === "percentage" ? "%" : "INR"}`
-                        ) : (
-                          "None"
-                        )}
-                      </p>
-                    </div>
+
                   </div>
                 </div>
 
@@ -4477,28 +4740,21 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* List of all dues (including paid ones) */}
-                        <div className="border border-border/60 rounded-2xl overflow-hidden bg-card">
+                        <div className="border border-border/60 rounded-2xl overflow-x-auto bg-card">
                           <table className="w-full text-xs text-left">
                             <thead>
                               <tr className="bg-muted/40 border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                <th className="py-2.5 px-4">Title</th>
-                                <th className="py-2.5 px-3">Date</th>
-                                <th className="py-2.5 px-3">Billed</th>
-                                <th className="py-2.5 px-3">Paid</th>
-                                <th className="py-2.5 px-3">Actual Paid</th>
-                                <th className="py-2.5 px-3">Balance</th>
-                                <th className="py-2.5 px-3 text-right pr-4">Status</th>
+                                <th className="py-2.5 px-4 whitespace-nowrap">Title</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">Date</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">Billed (Net)</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">Paid</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">Balance</th>
+                                <th className="py-2.5 px-3 text-right pr-4 whitespace-nowrap">Status</th>
                               </tr>
                             </thead>
                             <tbody>
                               {studentDues.map((due) => {
                                 const duePayments = payments.filter((p) => p.fee_due_id === due.id && p.status === "success");
-                                const actualAmtPaid = duePayments.reduce((sum, p) => {
-                                  const base = parseFloat(p.amount_paid);
-                                  const charges = parseFloat(p.gateway_charges || "0.00");
-                                  const gst = parseFloat(p.gateway_charges_gst || "0.00");
-                                  return sum + base + charges + gst;
-                                }, 0);
 
                                 return (
                                   <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
@@ -4507,11 +4763,19 @@ export default function AdminDashboard() {
                                       {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[130px]" title={due.remarks}>{due.remarks}</p>}
                                     </td>
                                     <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
-                                    <td className="py-3 px-3 text-foreground">₹{parseFloat(due.final_amount).toLocaleString()}</td>
-                                    <td className="py-3 px-3 text-emerald-600 font-medium">₹{parseFloat(due.paid_amount).toLocaleString()}</td>
-                                    <td className="py-3 px-3 text-emerald-700 font-semibold">
+                                    <td className="py-3 px-3 font-semibold text-foreground">
+                                      <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
+                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0) && (
+                                        <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
+                                          ₹{parseFloat(due.original_amount).toLocaleString()}
+                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
+                                          {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-3 text-emerald-600 font-medium">
                                       <div className="flex items-center gap-1.5">
-                                        <span>₹{actualAmtPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                        <span>₹{parseFloat(due.paid_amount).toLocaleString()}</span>
                                         {duePayments.length > 0 && (
                                           <button
                                             type="button"
@@ -4547,16 +4811,6 @@ export default function AdminDashboard() {
                     );
                   })()}
                 </div>
-
-                {/* 5. Student Notes */}
-                {selectedStudentForView.notes && (
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Internal Administrator Notes</h4>
-                    <div className="bg-amber-500/[0.03] border border-amber-500/15 p-4 rounded-2xl text-xs text-foreground italic leading-relaxed">
-                      {selectedStudentForView.notes}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="p-6 border-t border-border bg-muted/20 flex justify-end">
@@ -4597,7 +4851,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Banner/Header */}
-              <div className="bg-gradient-to-r from-amber-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+              <div className="bg-gradient-to-r from-amber-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
                   {selectedParentForView.full_name[0]}
                 </div>
@@ -4753,7 +5007,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-border">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-border rounded-t-[22px]">
                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Calculator size={18} className="text-primary" /> Add Custom Charge / Due
                 </h3>
@@ -4868,7 +5122,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Header */}
-              <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+              <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                   <CreditCard size={24} />
                 </div>
@@ -4892,6 +5146,12 @@ export default function AdminDashboard() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Resource Fee component:</span>
                         <span className="font-semibold text-foreground">₹{parseFloat(selectedDueForReceiptDetails.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                     {parseFloat(selectedDueForReceiptDetails.admission_fee || "0") > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Admission Fee component:</span>
+                        <span className="font-semibold text-foreground">₹{parseFloat(selectedDueForReceiptDetails.admission_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       </div>
                     )}
                     {parseFloat(selectedDueForReceiptDetails.discount_applied) > 0 && (
@@ -5019,7 +5279,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Header */}
-                <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+                <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                     <CheckCircle size={24} />
                   </div>
@@ -5064,6 +5324,12 @@ export default function AdminDashboard() {
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Resource Fee component:</span>
                             <span className="font-medium text-foreground">₹{parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        {parseFloat(due.admission_fee || "0") > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Admission Fee component:</span>
+                            <span className="font-medium text-foreground">₹{parseFloat(due.admission_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
                         {parseFloat(due.discount_applied) > 0 && (
