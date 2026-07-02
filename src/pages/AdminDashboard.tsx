@@ -3904,11 +3904,12 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="py-3 font-semibold text-foreground">
                                       <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
-                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0) && (
+                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0 || parseFloat(due.resource_fee || "0") > 0) && (
                                         <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
-                                          ₹{parseFloat(due.original_amount).toLocaleString()}
-                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
+                                          ₹{parseFloat(due.tuition_fee).toLocaleString()} tuition
+                                          {parseFloat(due.resource_fee || "0") > 0 && ` + ₹${parseFloat(due.resource_fee).toLocaleString()} resource`}
                                           {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
+                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
                                         </div>
                                       )}
                                     </td>
@@ -4897,11 +4898,12 @@ export default function AdminDashboard() {
                                     <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
                                     <td className="py-3 px-3 font-semibold text-foreground">
                                       <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
-                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0) && (
+                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0 || parseFloat(due.resource_fee || "0") > 0) && (
                                         <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
-                                          ₹{parseFloat(due.original_amount).toLocaleString()}
-                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
+                                          ₹{parseFloat(due.tuition_fee).toLocaleString()} tuition
+                                          {parseFloat(due.resource_fee || "0") > 0 && ` + ₹${parseFloat(due.resource_fee).toLocaleString()} resource`}
                                           {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
+                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
                                         </div>
                                       )}
                                     </td>
