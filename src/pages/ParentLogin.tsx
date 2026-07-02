@@ -814,11 +814,12 @@ export default function ParentLogin() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 border-b border-border pb-6">
           <div>
-            <span className="text-xs font-semibold text-primary tracking-wider uppercase">Active Parent Profile</span>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground flex items-center gap-2">
               Welcome, {user?.full_name || "Jane Doe"}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Logged in with parent credentials</p>
+            <p className="text-sm text-primary font-medium mt-1.5">
+              We are delighted to partner with you in your child's educational and developmental journey at Aspen Montessori House.
+            </p>
           </div>
         </div>
 

@@ -120,11 +120,11 @@ export default function AdminDashboard() {
     const hash = window.location.hash || "";
     const searchParams = new URLSearchParams(window.location.search);
     return hash.includes("type=recovery") ||
-           hash.includes("type=invite") ||
-           hash.includes("type=signup") ||
-           searchParams.get("type") === "recovery" ||
-           searchParams.get("type") === "invite" ||
-           searchParams.get("type") === "signup";
+      hash.includes("type=invite") ||
+      hash.includes("type=signup") ||
+      searchParams.get("type") === "recovery" ||
+      searchParams.get("type") === "invite" ||
+      searchParams.get("type") === "signup";
   });
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -329,15 +329,15 @@ export default function AdminDashboard() {
     // Check if URL has recovery tokens in hash or query search parameters
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
-    
+
     const isRecovery = hash.includes("type=recovery") || searchParams.get("type") === "recovery";
     const isInvite = hash.includes("type=invite") || searchParams.get("type") === "invite";
     const isSignup = hash.includes("type=signup") || searchParams.get("type") === "signup";
-    
+
     if (isRecovery || isInvite || isSignup) {
       setIsResetMode(true);
     }
-    
+
     // Also listen to PASSWORD_RECOVERY event from Supabase locally
     const handleAuthChange = async () => {
       const { supabase } = await import("@/lib/supabase");
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
       });
       return subscription;
     };
-    
+
     const subPromise = handleAuthChange();
     return () => {
       subPromise.then(sub => sub.unsubscribe());
@@ -447,13 +447,13 @@ export default function AdminDashboard() {
       setLoginError("Please enter your email");
       return;
     }
-    
+
     let email = username.trim();
     if (!email.includes("@")) {
       email = email + "@gmail.com";
       setUsername(email);
     }
-    
+
     if (!password) {
       setLoginError("Please enter your password");
       return;
@@ -743,7 +743,7 @@ export default function AdminDashboard() {
         });
         toast.success("Fee configuration plan registered!");
       }
-      
+
       fetchAllData();
       // Reset
       setPlanForm({
@@ -802,7 +802,7 @@ export default function AdminDashboard() {
 
       toast.success("Fee discount rule successfully registered!");
       fetchAllData();
-      
+
       // Reset
       setRuleForm({
         rule_name: "",
@@ -978,7 +978,7 @@ export default function AdminDashboard() {
     const student = students.find((s) => s.id === payment.student_id);
     const studentName = student ? student.student_name : "Student";
     const parent = profiles.find((p) => p.id === student?.parent_id);
-    
+
     const invoiceWindow = window.open("", "_blank");
     if (!invoiceWindow) return;
 
@@ -1327,7 +1327,7 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              {loginError && <p className="text-sm text-destructive font-medium flex items-center gap-1.5"><AlertCircle size={14}/> {loginError}</p>}
+              {loginError && <p className="text-sm text-destructive font-medium flex items-center gap-1.5"><AlertCircle size={14} /> {loginError}</p>}
 
               <button
                 type="submit"
@@ -1375,8 +1375,8 @@ export default function AdminDashboard() {
                 {isForgotPassword ? "Reset Admin Password" : "Admin Portal"}
               </h1>
               <p className="text-muted-foreground text-sm">
-                {isForgotPassword 
-                  ? "Get instructions sent to your email to set a new admin password" 
+                {isForgotPassword
+                  ? "Get instructions sent to your email to set a new admin password"
                   : "Sign in with administrator credentials"}
               </p>
             </div>
@@ -1395,8 +1395,8 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                {loginError && <p className="text-sm text-destructive font-medium flex items-center gap-1.5"><AlertCircle size={14}/> {loginError}</p>}
-                {forgotSuccess && <p className="text-sm text-emerald-600 font-medium flex items-center gap-1.5"><CheckCircle size={14}/> Password reset link sent to your email!</p>}
+                {loginError && <p className="text-sm text-destructive font-medium flex items-center gap-1.5"><AlertCircle size={14} /> {loginError}</p>}
+                {forgotSuccess && <p className="text-sm text-emerald-600 font-medium flex items-center gap-1.5"><CheckCircle size={14} /> Password reset link sent to your email!</p>}
 
                 <button
                   type="submit"
@@ -1444,11 +1444,10 @@ export default function AdminDashboard() {
                             setUsername(username + ext);
                           }
                         }}
-                        className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-                          username.endsWith(ext)
-                            ? "bg-primary/10 text-primary border-primary/30 font-medium"
-                            : "bg-muted hover:bg-muted/80 text-muted-foreground border-transparent"
-                        }`}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-all ${username.endsWith(ext)
+                          ? "bg-primary/10 text-primary border-primary/30 font-medium"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground border-transparent"
+                          }`}
                       >
                         {ext}
                       </button>
@@ -1529,13 +1528,13 @@ export default function AdminDashboard() {
     const student = students.find((s) => s.id === due.student_id);
     const query = dueSearch.toLowerCase().trim();
     if (!query) return true;
-    
+
     const studentName = student?.student_name || "";
     const admissionNum = student?.admission_number || "";
     const dueTitle = due.due_title || "";
     const dueIdStr = String(due.id);
     const statusStr = due.status || "";
-    
+
     return studentName.toLowerCase().includes(query) ||
       admissionNum.toLowerCase().includes(query) ||
       dueTitle.toLowerCase().includes(query) ||
@@ -1564,8 +1563,8 @@ export default function AdminDashboard() {
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-colors text-left ${activeTab === type
-                    ? "bg-primary/10 text-primary border-l-4 border-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-primary/10 text-primary border-l-4 border-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
                 <Icon size={16} />
@@ -1657,116 +1656,90 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase">Total Students</span>
-                          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <GraduationCap size={16} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto py-6">
+                      <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Total Students</span>
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                            <GraduationCap size={22} />
                           </div>
                         </div>
-                        <p className="text-2xl font-bold">{dashboardMetrics?.total_students?.total || 0}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                          <TrendingUp size={10} className="text-primary" />
-                          <span>+{dashboardMetrics?.total_students?.added_this_month || 0} added this month</span>
+                        <div className="my-4">
+                          <p className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight">
+                            {dashboardMetrics?.total_students?.total || 0}
+                          </p>
+                        </div>
+                        <p className="text-xs lg:text-sm text-muted-foreground flex items-center gap-1.5 mt-2">
+                          <TrendingUp size={14} className="text-primary" />
+                          <span className="font-semibold text-primary">+{dashboardMetrics?.total_students?.added_this_month || 0}</span> added this month
                         </p>
                       </div>
 
-                      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase">Active Parents</span>
-                          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <UserCheck size={16} />
+                      <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Active Parents</span>
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                            <UserCheck size={22} />
                           </div>
                         </div>
-                        <p className="text-2xl font-bold">{dashboardMetrics?.active_parents?.total || 0}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                          <TrendingUp size={10} className="text-primary" />
-                          <span>+{dashboardMetrics?.active_parents?.added_this_month || 0} added this month</span>
+                        <div className="my-4">
+                          <p className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight">
+                            {dashboardMetrics?.active_parents?.total || 0}
+                          </p>
+                        </div>
+                        <p className="text-xs lg:text-sm text-muted-foreground flex items-center gap-1.5 mt-2">
+                          <TrendingUp size={14} className="text-primary" />
+                          <span className="font-semibold text-primary">+{dashboardMetrics?.active_parents?.added_this_month || 0}</span> added this month
                         </p>
                       </div>
 
-                      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
+                      <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase">Revenue (Month)</span>
+                            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Revenue (Month)</span>
                             <button
                               onClick={() => setShowRevenue(!showRevenue)}
-                              className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted focus:outline-none focus:ring-1 focus:ring-primary"
+                              className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
                               title={showRevenue ? "Hide Revenue" : "Show Revenue"}
                               aria-label={showRevenue ? "Hide Revenue" : "Show Revenue"}
                             >
-                              {showRevenue ? <EyeOff size={14} /> : <Eye size={14} />}
+                              {showRevenue ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                           </div>
-                          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <DollarSign size={16} />
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                            <DollarSign size={22} />
                           </div>
                         </div>
-                        <p className="text-2xl font-bold tracking-tight">
-                          {showRevenue ? (
-                            `₹${parseFloat(dashboardMetrics?.revenue?.amount || "0").toLocaleString("en-IN")}`
-                          ) : (
-                            "••••••"
-                          )}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                          <TrendingUp size={10} className="text-primary" />
-                          <span>+{dashboardMetrics?.revenue?.percent_change || "0"}% change MoM</span>
+                        <div className="my-4">
+                          <p className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight">
+                            {showRevenue ? (
+                              `₹${parseFloat(dashboardMetrics?.revenue?.amount || "0").toLocaleString("en-IN")}`
+                            ) : (
+                              "••••••"
+                            )}
+                          </p>
+                        </div>
+                        <p className="text-xs lg:text-sm text-muted-foreground flex items-center gap-1.5 mt-2">
+                          <TrendingUp size={14} className="text-primary" />
+                          <span className="font-semibold text-primary">+{dashboardMetrics?.revenue?.percent_change || "0"}%</span> change MoM
                         </p>
                       </div>
 
-                      <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase">New Admissions</span>
-                          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Plus size={16} />
+                      <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">New Admissions</span>
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Plus size={22} />
                           </div>
                         </div>
-                        <p className="text-2xl font-bold">{dashboardMetrics?.new_admissions?.total || 0}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <div className="my-4">
+                          <p className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight">
+                            {dashboardMetrics?.new_admissions?.total || 0}
+                          </p>
+                        </div>
+                        <p className="text-xs lg:text-sm text-muted-foreground mt-2 font-semibold">
                           Since {dashboardMetrics?.new_admissions?.quarter_start || "current quarter"}
                         </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
-                      <h3 className="font-semibold text-foreground mb-4">Admissions and Fees overview</h3>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs md:text-sm">
-                          <thead>
-                            <tr className="border-b border-border text-muted-foreground text-left text-[10px] font-bold uppercase tracking-wider">
-                              <th className="pb-3">Name</th>
-                              <th className="pb-3">Program</th>
-                              <th className="pb-3">Academic Year</th>
-                              <th className="pb-3">Status</th>
-                              <th className="pb-3">Dues state</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {students.slice(0, 8).map((student) => {
-                              const plan = feeAccounts.find(a => a.student_id === student.id);
-                              return (
-                                <tr key={student.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
-                                  <td className="py-3 font-semibold text-foreground">{student.student_name} <span className="text-muted-foreground font-mono text-[10px]">({student.admission_number})</span></td>
-                                  <td className="py-3 text-muted-foreground">{student.class_name}</td>
-                                  <td className="py-3 text-muted-foreground">{student.academic_year}</td>
-                                  <td className="py-3">
-                                    <span className="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-700">
-                                      Active
-                                    </span>
-                                  </td>
-                                  <td className="py-3">
-                                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${plan ? "bg-amber-500/10 text-amber-700" : "bg-muted text-muted-foreground"
-                                      }`}>
-                                      {plan ? "Fee plan assigned" : "No active cycle"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
                       </div>
                     </div>
                   </>
@@ -1876,9 +1849,9 @@ export default function AdminDashboard() {
                             className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
                           >
                             <option value="">Select Parent Profile</option>
-                             {profiles.filter(p => ((p as any).roles || []).includes("parent")).map(p => (
-                               <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>
-                             ))}
+                            {profiles.filter(p => ((p as any).roles || []).includes("parent")).map(p => (
+                              <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -1952,7 +1925,7 @@ export default function AdminDashboard() {
                       </div>
                     </form>
                   </div>
-                                        {/* Students Directory list */}
+                  {/* Students Directory list */}
                   <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border shadow-sm overflow-x-auto">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                       <h3 className="font-semibold text-foreground flex items-center gap-1.5">
@@ -2023,8 +1996,8 @@ export default function AdminDashboard() {
                           const matchesClass = classFilter === "All" || student.class_name === classFilter;
                           const matchesYear = yearFilter === "All" || student.academic_year === yearFilter;
                           const query = studentSearch.toLowerCase().trim();
-                          const matchesQuery = !query || 
-                            student.student_name.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            student.student_name.toLowerCase().includes(query) ||
                             student.admission_number.toLowerCase().includes(query) ||
                             (student.class_name || "").toLowerCase().includes(query);
                           return matchesActive && matchesClass && matchesYear && matchesQuery;
@@ -2049,11 +2022,10 @@ export default function AdminDashboard() {
                               )}
                             </td>
                             <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                student.is_active
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                              }`}>
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${student.is_active
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                }`}>
                                 {student.is_active ? "Active" : "Inactive"}
                               </span>
                             </td>
@@ -2280,10 +2252,10 @@ export default function AdminDashboard() {
                           const matchesRole = ((p as any).roles || []).includes("parent");
                           const matchesActive = !hideInactiveParents || p.is_active;
                           const query = parentSearch.toLowerCase().trim();
-                          const matchesQuery = !query || 
-                            p.full_name.toLowerCase().includes(query) || 
-                            p.email.toLowerCase().includes(query) || 
-                            p.phone.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            p.full_name.toLowerCase().includes(query) ||
+                            p.email.toLowerCase().includes(query) ||
+                            p.phone.toLowerCase().includes(query) ||
                             p.id.toLowerCase().includes(query);
                           return matchesRole && matchesActive && matchesQuery;
                         }).map((profile) => (
@@ -2311,11 +2283,10 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                profile.is_active
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                              }`}>
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                }`}>
                                 {profile.is_active ? "Active" : "Inactive"}
                               </span>
                             </td>
@@ -2552,10 +2523,10 @@ export default function AdminDashboard() {
                           const matchesRole = ((p as any).roles || []).includes("admin");
                           const matchesActive = !hideInactiveAdmins || p.is_active;
                           const query = adminSearch.toLowerCase().trim();
-                          const matchesQuery = !query || 
-                            p.full_name.toLowerCase().includes(query) || 
-                            p.email.toLowerCase().includes(query) || 
-                            p.phone.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            p.full_name.toLowerCase().includes(query) ||
+                            p.email.toLowerCase().includes(query) ||
+                            p.phone.toLowerCase().includes(query) ||
                             p.id.toLowerCase().includes(query);
                           return matchesRole && matchesActive && matchesQuery;
                         }).map((profile) => (
@@ -2577,8 +2548,8 @@ export default function AdminDashboard() {
                             </td>
                             <td className="py-3">
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                                 }`}>
                                 {profile.is_active ? "Active" : "Inactive"}
                               </span>
@@ -2656,7 +2627,7 @@ export default function AdminDashboard() {
                   {/* Create fee plan form */}
                   <div className="lg:col-span-1 bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
                     <h3 className="font-semibold text-foreground flex items-center gap-1.5">
-                      {editingPlanId ? <Edit size={16} className="text-primary" /> : <Plus size={16} className="text-primary" />} 
+                      {editingPlanId ? <Edit size={16} className="text-primary" /> : <Plus size={16} className="text-primary" />}
                       {editingPlanId ? "Edit program fee plan" : "Configure program fee plan"}
                     </h3>
                     <form onSubmit={handleCreatePlan} className="space-y-3">
@@ -2668,7 +2639,7 @@ export default function AdminDashboard() {
                           value={planForm.class_name}
                           onChange={(e) => {
                             const cls = e.target.value;
-                           const slugMap: Record<string, string> = {
+                            const slugMap: Record<string, string> = {
                               "Montessori-1": "mont1",
                               "Montessori-2": "mont2",
                               "Montessori-3": "mont3",
@@ -2758,7 +2729,7 @@ export default function AdminDashboard() {
                           type="submit"
                           className="flex-1 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5"
                         >
-                          {editingPlanId ? <Save size={14} /> : <Plus size={14} />} 
+                          {editingPlanId ? <Save size={14} /> : <Plus size={14} />}
                           {editingPlanId ? "Save Changes" : "Register Fee Plan"}
                         </button>
                         {editingPlanId && (
@@ -2831,8 +2802,8 @@ export default function AdminDashboard() {
                         {feePlans.filter((plan) => {
                           const matchesActive = !hideInactivePlans || plan.is_active;
                           const query = planSearch.toLowerCase().trim();
-                          const matchesQuery = !query || 
-                            plan.class_name.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            plan.class_name.toLowerCase().includes(query) ||
                             plan.program_type.toLowerCase().includes(query) ||
                             plan.frequency.toLowerCase().includes(query);
                           return matchesActive && matchesQuery;
@@ -2844,11 +2815,10 @@ export default function AdminDashboard() {
                             <td className="py-3 text-foreground font-medium">₹{parseFloat(plan.resource_fee).toLocaleString()}</td>
                             <td className="py-3 font-semibold capitalize text-primary">{plan.frequency}</td>
                             <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                plan.is_active
-                                  ? "bg-emerald-500/10 text-emerald-700"
-                                  : "bg-rose-500/10 text-rose-700"
-                              }`}>
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${plan.is_active
+                                ? "bg-emerald-500/10 text-emerald-700"
+                                : "bg-rose-500/10 text-rose-700"
+                                }`}>
                                 {plan.is_active ? "Active" : "Inactive"}
                               </span>
                             </td>
@@ -2873,11 +2843,10 @@ export default function AdminDashboard() {
                                 </button>
                                 <button
                                   onClick={() => handleTogglePlanActive(plan.id)}
-                                  className={`p-1.5 rounded-full transition-all ${
-                                    plan.is_active
-                                      ? "text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20"
-                                      : "text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
-                                  }`}
+                                  className={`p-1.5 rounded-full transition-all ${plan.is_active
+                                    ? "text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20"
+                                    : "text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
+                                    }`}
                                   title={plan.is_active ? "Deactivate Plan" : "Activate Plan"}
                                 >
                                   {plan.is_active ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
@@ -3021,14 +2990,14 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {(() => {
                         const filteredRules = feeRules.filter((rule) => {
                           const matchesActive = !hideInactiveRules || rule.is_active;
                           const query = ruleSearch.toLowerCase().trim();
-                          const matchesQuery = !query || 
-                            rule.rule_name.toLowerCase().includes(query) || 
-                            rule.discount_type.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            rule.rule_name.toLowerCase().includes(query) ||
+                            rule.discount_type.toLowerCase().includes(query) ||
                             (rule.applies_to || "").toLowerCase().includes(query);
                           return matchesActive && matchesQuery;
                         });
@@ -3104,8 +3073,8 @@ export default function AdminDashboard() {
                           value={accountForm.student_id}
                           onChange={(e) => {
                             const studId = Number(e.target.value);
-                            setAccountForm({ 
-                              ...accountForm, 
+                            setAccountForm({
+                              ...accountForm,
                               student_id: studId,
                               fee_plan_id: 0, // Reset selected plan to prevent mismatch
                               payment_cycle: "quarterly" // Default cycle reset
@@ -3141,12 +3110,12 @@ export default function AdminDashboard() {
                             const selectedSubStudent = students.find(s => s.id === Number(accountForm.student_id));
                             const isToddler = (selectedSubStudent?.class_name || "").toLowerCase() === "toddlers";
                             const filteredPlans = selectedSubStudent
-                              ? feePlans.filter(p => 
-                                  (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
-                                  (p.program_type === "daycare" && !isToddler)
-                                )
+                              ? feePlans.filter(p =>
+                                (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
+                                (p.program_type === "daycare" && !isToddler)
+                              )
                               : feePlans;
-                            
+
                             return filteredPlans.map(p => (
                               <option key={p.id} value={p.id}>
                                 {p.class_name} - Tuition: ₹{parseFloat(p.tuition_fee).toLocaleString()} ({p.frequency})
@@ -3158,12 +3127,12 @@ export default function AdminDashboard() {
                           const selectedSubStudent = students.find(s => s.id === Number(accountForm.student_id));
                           const isToddler = (selectedSubStudent?.class_name || "").toLowerCase() === "toddlers";
                           const filteredPlans = selectedSubStudent
-                            ? feePlans.filter(p => 
-                                (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
-                                (p.program_type === "daycare" && !isToddler)
-                              )
+                            ? feePlans.filter(p =>
+                              (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
+                              (p.program_type === "daycare" && !isToddler)
+                            )
                             : feePlans;
-                          
+
                           if (selectedSubStudent && filteredPlans.length === 0) {
                             return (
                               <p className="text-[10px] text-destructive mt-1 font-semibold">
@@ -3288,11 +3257,11 @@ export default function AdminDashboard() {
 
                           const query = accountSearch.toLowerCase().trim();
                           const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "";
-                          const matchesQuery = !query || 
-                            (studentObj?.student_name || "").toLowerCase().includes(query) || 
-                            (studentObj?.admission_number || "").toLowerCase().includes(query) || 
-                            planName.toLowerCase().includes(query) || 
-                            account.payment_cycle.toLowerCase().includes(query) || 
+                          const matchesQuery = !query ||
+                            (studentObj?.student_name || "").toLowerCase().includes(query) ||
+                            (studentObj?.admission_number || "").toLowerCase().includes(query) ||
+                            planName.toLowerCase().includes(query) ||
+                            account.payment_cycle.toLowerCase().includes(query) ||
                             String(account.id).includes(query);
 
                           return matchesActive && matchesQuery;
@@ -3306,8 +3275,8 @@ export default function AdminDashboard() {
                               <td className="py-3 text-muted-foreground">{planName}</td>
                               <td className="py-3 text-muted-foreground">{account.effective_from}</td>
                               <td className="py-3 font-semibold capitalize text-primary">
-                                 {account.payment_cycle === "quarterly" ? `Quarterly (${account.installments || 3} Inst)` : account.payment_cycle}
-                               </td>
+                                {account.payment_cycle === "quarterly" ? `Quarterly (${account.installments || 3} Inst)` : account.payment_cycle}
+                              </td>
                               <td className="py-3 text-right">
                                 <div className="flex gap-1 justify-end">
                                   <button
@@ -3518,7 +3487,7 @@ export default function AdminDashboard() {
                               const studentId = due.student_id;
                               const studentName = student ? student.student_name : `Student ID: ${due.student_id}`;
                               const admissionNumber = student ? student.admission_number : "N/A";
-                              
+
                               let group = groups.find(g => g.studentId === studentId);
                               if (!group) {
                                 group = { studentId, studentName, admissionNumber, dues: [] };
@@ -3548,7 +3517,7 @@ export default function AdminDashboard() {
                             return (
                               <React.Fragment key={group.studentId}>
                                 {/* Student Section Header Row */}
-                                <tr 
+                                <tr
                                   className="bg-muted/40 border-b border-border/60 cursor-pointer hover:bg-muted/60 transition-colors"
                                   onClick={() => {
                                     setExpandedStudentIds(prev => ({
@@ -3628,7 +3597,7 @@ export default function AdminDashboard() {
                           const studentId = due.student_id;
                           const studentName = student ? student.student_name : `Student ID: ${due.student_id}`;
                           const admissionNumber = student ? student.admission_number : "N/A";
-                          
+
                           let group = groups.find(g => g.studentId === studentId);
                           if (!group) {
                             group = { studentId, studentName, admissionNumber, dues: [] };
@@ -3642,7 +3611,7 @@ export default function AdminDashboard() {
                       const groupsPerPage = 5;
                       const totalDuesPages = Math.ceil(studentGroups.length / groupsPerPage) || 1;
                       if (totalDuesPages <= 1) return null;
-                      
+
                       return (
                         <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
                           <span className="text-muted-foreground">
@@ -3728,7 +3697,7 @@ export default function AdminDashboard() {
                             onChange={(e) => {
                               const dueId = Number(e.target.value);
                               setPaymentForm({ ...paymentForm, fee_due_id: dueId });
-                              
+
                               const selectedDue = openDues.find(d => d.id === dueId);
                               if (selectedDue) {
                                 setPaymentForm(prev => ({
@@ -3880,13 +3849,12 @@ export default function AdminDashboard() {
                                           <td className="py-2.5 uppercase text-[9px] font-semibold text-muted-foreground">{p.payment_mode.replace("_", " ")}</td>
                                           <td className="py-2.5 text-muted-foreground font-mono text-[9px]">{new Date(p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</td>
                                           <td className="py-2.5">
-                                            <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
-                                              p.status === "success"
-                                                ? "bg-emerald-500/10 text-emerald-700"
-                                                : p.status === "pending"
-                                                  ? "bg-amber-500/10 text-amber-700"
-                                                  : "bg-rose-500/10 text-rose-700"
-                                            }`}>
+                                            <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${p.status === "success"
+                                              ? "bg-emerald-500/10 text-emerald-700"
+                                              : p.status === "pending"
+                                                ? "bg-amber-500/10 text-amber-700"
+                                                : "bg-rose-500/10 text-rose-700"
+                                              }`}>
                                               {p.status}
                                             </span>
                                           </td>
@@ -4077,9 +4045,8 @@ export default function AdminDashboard() {
                             return (
                               <tr
                                 key={student.id}
-                                className={`border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors ${
-                                  isGraduated ? "opacity-60 grayscale-[10%]" : ""
-                                }`}
+                                className={`border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors ${isGraduated ? "opacity-60 grayscale-[10%]" : ""
+                                  }`}
                               >
                                 <td className="py-3">
                                   {!isGraduated ? (
@@ -4117,11 +4084,10 @@ export default function AdminDashboard() {
                                   {student.academic_year}
                                 </td>
                                 <td className="py-3">
-                                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase ${
-                                    isGraduated
-                                      ? "bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
-                                      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
-                                  }`}>
+                                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase ${isGraduated
+                                    ? "bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                    }`}>
                                     {isGraduated ? "Graduated" : "Active"}
                                   </span>
                                 </td>
@@ -4136,8 +4102,8 @@ export default function AdminDashboard() {
                                             student.class_name === "Montessori-1"
                                               ? "Montessori-2"
                                               : student.class_name === "Montessori-2"
-                                              ? "Montessori-3"
-                                              : "Montessori-1"
+                                                ? "Montessori-3"
+                                                : "Montessori-1"
                                           );
                                           setIsTransitionModalOpen(true);
                                         }}
@@ -4366,11 +4332,10 @@ export default function AdminDashboard() {
                     <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-muted text-muted-foreground rounded-full">
                       Adm: {selectedStudentForView.admission_number}
                     </span>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                      selectedStudentForView.is_active
-                        ? "bg-emerald-500/10 text-emerald-700"
-                        : "bg-rose-500/10 text-rose-700"
-                    }`}>
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${selectedStudentForView.is_active
+                      ? "bg-emerald-500/10 text-emerald-700"
+                      : "bg-rose-500/10 text-rose-700"
+                      }`}>
                       {selectedStudentForView.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
@@ -4466,9 +4431,8 @@ export default function AdminDashboard() {
                                 <p className="font-semibold text-foreground">{plan ? plan.class_name : "Fee Plan"} ({sub.payment_cycle})</p>
                                 <p className="text-[10px] text-muted-foreground mt-0.5">Enrolled from: {sub.effective_from}</p>
                               </div>
-                              <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase ${
-                                sub.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-rose-500/10 text-rose-700"
-                              }`}>
+                              <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase ${sub.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-rose-500/10 text-rose-700"
+                                }`}>
                                 {sub.is_active ? "Active" : "Inactive"}
                               </span>
                             </div>
@@ -4562,15 +4526,14 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
                                     <td className="py-3 px-3 text-right pr-4">
-                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
-                                        due.status === "paid"
-                                          ? "bg-emerald-500/10 text-emerald-700"
-                                          : due.status === "partial"
-                                            ? "bg-amber-500/10 text-amber-700"
-                                            : due.status === "overdue"
-                                              ? "bg-rose-500/10 text-rose-700"
-                                              : "bg-blue-500/10 text-blue-700"
-                                      }`}>
+                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${due.status === "paid"
+                                        ? "bg-emerald-500/10 text-emerald-700"
+                                        : due.status === "partial"
+                                          ? "bg-amber-500/10 text-amber-700"
+                                          : due.status === "overdue"
+                                            ? "bg-rose-500/10 text-rose-700"
+                                            : "bg-blue-500/10 text-blue-700"
+                                        }`}>
                                         {due.status}
                                       </span>
                                     </td>
@@ -4644,11 +4607,10 @@ export default function AdminDashboard() {
                     <span className="px-2 py-0.5 text-[9px] font-mono font-bold bg-muted text-muted-foreground rounded-full">
                       ID: {selectedParentForView.id}
                     </span>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                      selectedParentForView.is_active
-                        ? "bg-emerald-500/10 text-emerald-700"
-                        : "bg-rose-500/10 text-rose-700"
-                    }`}>
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${selectedParentForView.is_active
+                      ? "bg-emerald-500/10 text-emerald-700"
+                      : "bg-rose-500/10 text-rose-700"
+                      }`}>
                       {selectedParentForView.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
@@ -4726,7 +4688,7 @@ export default function AdminDashboard() {
                     const kidsIds = students.filter((s) => s.parent_id === selectedParentForView.id).map(s => s.id);
                     const parentDues = openDues.filter(d => kidsIds.includes(d.student_id));
                     const totalBalance = parentDues.reduce((sum, d) => sum + parseFloat(d.balance), 0);
-                    
+
                     return (
                       <div className="bg-muted/30 border border-border/40 p-4 rounded-2xl text-xs md:text-sm">
                         <div className="flex items-center justify-between mb-3 pb-3 border-b border-border/60">
