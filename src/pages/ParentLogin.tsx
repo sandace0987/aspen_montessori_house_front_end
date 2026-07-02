@@ -434,11 +434,12 @@ export default function ParentLogin() {
     const totalPaid = parseFloat(payment.total_amount_paid || payment.amount_paid);
 
     const hasCharges = gatewayCharges > 0;
+    const due = dues.find(d => d.id === payment.fee_due_id);
 
     invoiceWindow.document.write(`
       <html>
         <head>
-          <title>Receipt - Aspen Montessori House</title>
+          <title>Receipt - ${payment.id} - Aspen Montessori House</title>
           <style>
             body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
             .header { border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
@@ -452,6 +453,7 @@ export default function ParentLogin() {
             td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
             .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 30px; color: #b45309; }
             .footer { border-top: 1px solid #f1f5f9; margin-top: 60px; padding-top: 20px; font-size: 12px; text-align: center; color: #94a3b8; }
+            .breakdown-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
           </style>
         </head>
         <body>
@@ -479,6 +481,34 @@ export default function ParentLogin() {
           </div>
           <div class="section">
             <strong>Student Account:</strong> ${studentName}
+
+            ${due ? `
+            <div style="margin-top: 16px; margin-bottom: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 14px;">Billed Installment Breakdown:</strong>
+              <div class="breakdown-row">
+                <span>Tuition Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.tuition_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ${parseFloat(due.resource_fee) > 0 ? `
+              <div class="breakdown-row">
+                <span>Resource Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              ${parseFloat(due.discount_applied) > 0 ? `
+              <div class="breakdown-row" style="color: #15803d; font-weight: 500;">
+                <span>Discount Applied Component:</span>
+                <span>-₹${parseFloat(due.discount_applied).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              <div class="breakdown-row" style="font-weight: bold; border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 8px; color: #1e293b; font-size: 14px;">
+                <span>Net Installment Amount Billed:</span>
+                <span>₹${parseFloat(due.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+            ` : ""}
+
+            <strong style="display: block; margin-top: 20px; font-size: 14px; color: #1e293b;">Transaction Payment Allocation:</strong>
             <table>
               <thead>
                 <tr>
@@ -488,7 +518,7 @@ export default function ParentLogin() {
               </thead>
               <tbody>
                 <tr>
-                  <td>Montessori Fee Installment Clearance</td>
+                  <td>Montessori Fee Installment Clearance (This Payment)</td>
                   <td style="text-align: right; font-weight: 600;">₹${baseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                 </tr>
                 ${hasCharges ? `
@@ -503,7 +533,7 @@ export default function ParentLogin() {
                 ` : ""}
               </tbody>
             </table>
-            <div class="total">Total Received: ₹${totalPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div class="total">Total Received in Transaction: ₹${totalPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="footer">
             Aspen Montessori House &copy; 2026. Lanco Hills Private Rd, Manikonda, Hyderabad.<br/>

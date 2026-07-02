@@ -150,6 +150,8 @@ export default function AdminDashboard() {
   // View Details Modal States
   const [selectedStudentForView, setSelectedStudentForView] = useState<StudentResponse | null>(null);
   const [selectedParentForView, setSelectedParentForView] = useState<Profile | null>(null);
+  const [selectedDueForReceiptDetails, setSelectedDueForReceiptDetails] = useState<FeeDueResponse | null>(null);
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
 
   // Form inputs
   // Student form
@@ -971,6 +973,132 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePrintReceipt = (payment: PaymentResponse) => {
+    const student = students.find((s) => s.id === payment.student_id);
+    const studentName = student ? student.student_name : "Student";
+    const parent = profiles.find((p) => p.id === student?.parent_id);
+    
+    const invoiceWindow = window.open("", "_blank");
+    if (!invoiceWindow) return;
+
+    const baseAmount = parseFloat(payment.amount_paid);
+    const gatewayCharges = parseFloat(payment.gateway_charges || "0.00");
+    const gatewayChargesGst = parseFloat(payment.gateway_charges_gst || "0.00");
+    const totalPaid = parseFloat(payment.total_amount_paid || payment.amount_paid);
+
+    const hasCharges = gatewayCharges > 0;
+    const due = allDues.find(d => d.id === payment.fee_due_id);
+
+    invoiceWindow.document.write(`
+      <html>
+        <head>
+          <title>Receipt - ${payment.id} - Aspen Montessori House</title>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+            .header { border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 24px; font-weight: bold; color: #b45309; }
+            .badge { display: inline-block; padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: bold; background: #dcfce7; color: #15803d; text-transform: uppercase; }
+            .section { margin-bottom: 24px; }
+            .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+            .box { padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #64748b; }
+            td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+            .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 30px; color: #b45309; }
+            .footer { border-top: 1px solid #f1f5f9; margin-top: 60px; padding-top: 20px; font-size: 12px; text-align: center; color: #94a3b8; }
+            .breakdown-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">ASPEN MONTESSORI HOUSE</div>
+              <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Receipt of Professional Payments</div>
+            </div>
+            <div class="badge">Success</div>
+          </div>
+          <div class="grid">
+            <div class="box">
+              <strong style="display:block; margin-bottom:8px; color:#475569;">Payer Info</strong>
+              <strong>Parent Name:</strong> ${parent ? parent.full_name : "N/A"}<br/>
+              <strong>Email:</strong> ${parent ? parent.email : "N/A"}<br/>
+              <strong>Phone:</strong> ${parent ? parent.phone : "N/A"}
+            </div>
+            <div class="box">
+              <strong style="display:block; margin-bottom:8px; color:#475569;">Transaction Details</strong>
+              <strong>Receipt No:</strong> AMH-REC-${payment.id}<br/>
+              <strong>Payment ID:</strong> ${payment.gateway_payment_id || "Desk manual"}<br/>
+              <strong>Date:</strong> ${new Date(payment.paid_at || payment.created_at).toLocaleString()}<br/>
+              <strong>Payment Mode:</strong> ${payment.payment_mode.replace("_", " ")}
+            </div>
+          </div>
+          <div class="section">
+            <strong>Student Account:</strong> ${studentName}
+
+            ${due ? `
+            <div style="margin-top: 16px; margin-bottom: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 14px;">Billed Installment Breakdown:</strong>
+              <div class="breakdown-row">
+                <span>Tuition Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.tuition_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ${parseFloat(due.resource_fee) > 0 ? `
+              <div class="breakdown-row">
+                <span>Resource Fee Component:</span>
+                <span style="font-weight: 500;">₹${parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              ${parseFloat(due.discount_applied) > 0 ? `
+              <div class="breakdown-row" style="color: #15803d; font-weight: 500;">
+                <span>Discount Applied Component:</span>
+                <span>-₹${parseFloat(due.discount_applied).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              <div class="breakdown-row" style="font-weight: bold; border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 8px; color: #1e293b; font-size: 14px;">
+                <span>Net Installment Amount Billed:</span>
+                <span>₹${parseFloat(due.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+            ` : ""}
+
+            <strong style="display: block; margin-top: 20px; font-size: 14px; color: #1e293b;">Transaction Payment Allocation:</strong>
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Montessori Fee Installment Clearance (This Payment)</td>
+                  <td style="text-align: right; font-weight: 600;">₹${baseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                </tr>
+                ${hasCharges ? `
+                <tr>
+                  <td>Online Gateway Convenience Charge (2%)</td>
+                  <td style="text-align: right; font-weight: 600;">₹${gatewayCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td>GST on Gateway Charge (18%)</td>
+                  <td style="text-align: right; font-weight: 600;">₹${gatewayChargesGst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                </tr>
+                ` : ""}
+              </tbody>
+            </table>
+            <div class="total">Total Received in Transaction: ₹${totalPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+          </div>
+          <div class="footer">
+            Aspen Montessori House &copy; 2026. Lanco Hills Private Rd, Manikonda, Hyderabad.<br/>
+            This is a computer generated confirmation receipt and requires no physical signature.
+          </div>
+        </body>
+      </html>
+    `);
+    invoiceWindow.document.close();
+    invoiceWindow.print();
+  };
+
   // Student transitions & bulk promote handlers
   const handleBulkTransition = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1371,8 +1499,8 @@ export default function AdminDashboard() {
     { type: "students" as TabType, icon: GraduationCap, label: "Students Directory" },
     { type: "plans" as TabType, icon: Settings, label: "Class Fee Plans" },
     { type: "accounts" as TabType, icon: BookOpen, label: "Fee Subscriptions" },
-    { type: "dues" as TabType, icon: Calculator, label: "Generate Installments" },
-    { type: "payments" as TabType, icon: CreditCard, label: "Record desk payments" },
+    { type: "dues" as TabType, icon: Calculator, label: "Generate Installments / See Ledger" },
+    { type: "payments" as TabType, icon: CreditCard, label: "Record Desk Payment / See Transactions" },
     { type: "transitions" as TabType, icon: ArrowRightLeft, label: "Class Transitions" },
   ];
 
@@ -3657,93 +3785,142 @@ export default function AdminDashboard() {
                         <p className="text-xs text-muted-foreground italic py-8 text-center">No payment transactions recorded yet.</p>
                       ) : (
                         <>
-                          <table className="w-full text-xs text-left">
-                            <thead>
-                              <tr className="border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                <th className="pb-2.5">Student</th>
-                                <th className="pb-2.5">Amount</th>
-                                <th className="pb-2.5">Mode</th>
-                                <th className="pb-2.5">Remarks / IDs</th>
-                                <th className="pb-2.5">Date</th>
-                                <th className="pb-2.5 text-right">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {payments.slice((paymentsPage - 1) * 10, paymentsPage * 10).map((p) => {
-                                const student = students.find((s) => s.id === p.student_id);
-                                const baseAmt = parseFloat(p.amount_paid);
-                                const gatewayCharges = parseFloat(p.gateway_charges || "0.00");
-                                const gatewayChargesGst = parseFloat(p.gateway_charges_gst || "0.00");
-                                const totalAmt = parseFloat(p.total_amount_paid || p.amount_paid);
-                                const totalCharges = gatewayCharges + gatewayChargesGst;
+                          <div className="mb-4">
+                            <input
+                              type="text"
+                              value={paymentSearchQuery}
+                              onChange={(e) => {
+                                setPaymentSearchQuery(e.target.value);
+                                setPaymentsPage(1);
+                              }}
+                              placeholder="Search transactions (student, ID, mode, status...)"
+                              className="w-full max-w-md px-3.5 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none transition-all"
+                            />
+                          </div>
 
-                                return (
-                                  <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
-                                    <td className="py-2.5">
-                                      <p className="font-semibold text-foreground">{student ? student.student_name : `Student ID: ${p.student_id}`}</p>
-                                      <p className="text-[9px] text-muted-foreground font-mono">{student ? student.admission_number : "N/A"}</p>
-                                    </td>
-                                    <td className="py-2.5">
-                                      <p className="font-bold text-foreground">₹{totalAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
-                                      {totalCharges > 0 ? (
-                                        <p className="text-[9px] text-muted-foreground">
-                                          Base: ₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })} | Charges: ₹{totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                        </p>
-                                      ) : (
-                                        <p className="text-[9px] text-muted-foreground">Desk payment (no fees)</p>
-                                      )}
-                                    </td>
-                                    <td className="py-2.5 uppercase text-[9px] font-semibold text-muted-foreground">{p.payment_mode.replace("_", " ")}</td>
-                                    <td className="py-2.5 max-w-[150px] truncate" title={p.remarks || p.gateway_payment_id || ""}>
-                                      <p className="text-foreground truncate">{p.remarks || "No remarks"}</p>
-                                      {p.gateway_payment_id && <p className="text-[9px] text-muted-foreground font-mono truncate">ID: {p.gateway_payment_id}</p>}
-                                    </td>
-                                    <td className="py-2.5 text-muted-foreground font-mono text-[9px]">{new Date(p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</td>
-                                    <td className="py-2.5 text-right">
-                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
-                                        p.status === "success"
-                                          ? "bg-emerald-500/10 text-emerald-700"
-                                          : p.status === "pending"
-                                            ? "bg-amber-500/10 text-amber-700"
-                                            : "bg-rose-500/10 text-rose-700"
-                                      }`}>
-                                        {p.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-
-                          {/* Pagination controls */}
                           {(() => {
-                            const totalPaymentsPages = Math.ceil(payments.length / 10) || 1;
-                            if (totalPaymentsPages <= 1) return null;
+                            const filteredPayments = payments.filter((p) => {
+                              const student = students.find((s) => s.id === p.student_id);
+                              const query = paymentSearchQuery.toLowerCase().trim();
+                              if (!query) return true;
+
+                              const studentName = student?.student_name || "";
+                              const admissionNum = student?.admission_number || "";
+                              const remarks = p.remarks || "";
+                              const gatewayPayId = p.gateway_payment_id || "";
+                              const gatewayOrderId = p.gateway_order_id || "";
+                              const mode = p.payment_mode || "";
+                              const status = p.status || "";
+                              const amountStr = String(p.amount_paid);
+                              const totalAmtStr = String(parseFloat(p.amount_paid) + parseFloat(p.gateway_charges || "0.00") + parseFloat(p.gateway_charges_gst || "0.00"));
+
+                              return studentName.toLowerCase().includes(query) ||
+                                admissionNum.toLowerCase().includes(query) ||
+                                remarks.toLowerCase().includes(query) ||
+                                gatewayPayId.toLowerCase().includes(query) ||
+                                gatewayOrderId.toLowerCase().includes(query) ||
+                                mode.toLowerCase().includes(query) ||
+                                status.toLowerCase().includes(query) ||
+                                amountStr.includes(query) ||
+                                totalAmtStr.includes(query);
+                            });
+
+                            if (filteredPayments.length === 0) {
+                              return <p className="text-xs text-muted-foreground italic py-8 text-center">No transaction records match your search.</p>;
+                            }
+
                             return (
-                              <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
-                                <span className="text-muted-foreground">
-                                  Showing payments {Math.min(payments.length, (paymentsPage - 1) * 10 + 1)}-{Math.min(payments.length, paymentsPage * 10)} of {payments.length}
-                                </span>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    disabled={paymentsPage === 1}
-                                    onClick={() => setPaymentsPage(prev => Math.max(prev - 1, 1))}
-                                    className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
-                                  >
-                                    Previous
-                                  </button>
-                                  <button
-                                    type="button"
-                                    disabled={paymentsPage === totalPaymentsPages}
-                                    onClick={() => setPaymentsPage(prev => Math.min(prev + 1, totalPaymentsPages))}
-                                    className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
-                                  >
-                                    Next
-                                  </button>
-                                </div>
-                              </div>
+                              <>
+                                <table className="w-full text-xs text-left">
+                                  <thead>
+                                    <tr className="border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                      <th className="pb-2.5">Student</th>
+                                      <th className="pb-2.5">Amount</th>
+                                      <th className="pb-2.5">Mode</th>
+                                      <th className="pb-2.5">Remarks / IDs</th>
+                                      <th className="pb-2.5">Date</th>
+                                      <th className="pb-2.5 text-right">Status</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {filteredPayments.slice((paymentsPage - 1) * 10, paymentsPage * 10).map((p) => {
+                                      const student = students.find((s) => s.id === p.student_id);
+                                      const baseAmt = parseFloat(p.amount_paid);
+                                      const gatewayCharges = parseFloat(p.gateway_charges || "0.00");
+                                      const gatewayChargesGst = parseFloat(p.gateway_charges_gst || "0.00");
+                                      const totalAmt = parseFloat(p.total_amount_paid || p.amount_paid);
+                                      const totalCharges = gatewayCharges + gatewayChargesGst;
+
+                                      return (
+                                        <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
+                                          <td className="py-2.5">
+                                            <p className="font-semibold text-foreground">{student ? student.student_name : `Student ID: ${p.student_id}`}</p>
+                                            <p className="text-[9px] text-muted-foreground font-mono">{student ? student.admission_number : "N/A"}</p>
+                                          </td>
+                                          <td className="py-2.5">
+                                            <p className="font-bold text-foreground">₹{totalAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
+                                            {totalCharges > 0 ? (
+                                              <p className="text-[9px] text-muted-foreground">
+                                                Base: ₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })} | Charges: ₹{totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                              </p>
+                                            ) : (
+                                              <p className="text-[9px] text-muted-foreground">Desk payment (no fees)</p>
+                                            )}
+                                          </td>
+                                          <td className="py-2.5 uppercase text-[9px] font-semibold text-muted-foreground">{p.payment_mode.replace("_", " ")}</td>
+                                          <td className="py-2.5 max-w-[150px] truncate" title={p.remarks || p.gateway_payment_id || ""}>
+                                            <p className="text-foreground truncate">{p.remarks || "No remarks"}</p>
+                                            {p.gateway_payment_id && <p className="text-[9px] text-muted-foreground font-mono truncate">ID: {p.gateway_payment_id}</p>}
+                                          </td>
+                                          <td className="py-2.5 text-muted-foreground font-mono text-[9px]">{new Date(p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</td>
+                                          <td className="py-2.5 text-right">
+                                            <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
+                                              p.status === "success"
+                                                ? "bg-emerald-500/10 text-emerald-700"
+                                                : p.status === "pending"
+                                                  ? "bg-amber-500/10 text-amber-700"
+                                                  : "bg-rose-500/10 text-rose-700"
+                                            }`}>
+                                              {p.status}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+
+                                {/* Pagination controls */}
+                                {(() => {
+                                  const totalPaymentsPages = Math.ceil(filteredPayments.length / 10) || 1;
+                                  if (totalPaymentsPages <= 1) return null;
+                                  return (
+                                    <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                                      <span className="text-muted-foreground">
+                                        Showing payments {Math.min(filteredPayments.length, (paymentsPage - 1) * 10 + 1)}-{Math.min(filteredPayments.length, paymentsPage * 10)} of {filteredPayments.length}
+                                      </span>
+                                      <div className="flex gap-2">
+                                        <button
+                                          type="button"
+                                          disabled={paymentsPage === 1}
+                                          onClick={() => setPaymentsPage(prev => Math.max(prev - 1, 1))}
+                                          className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
+                                        >
+                                          Previous
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={paymentsPage === totalPaymentsPages}
+                                          onClick={() => setPaymentsPage(prev => Math.min(prev + 1, totalPaymentsPages))}
+                                          className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-all font-medium"
+                                        >
+                                          Next
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </>
                             );
                           })()}
                         </>
@@ -4328,36 +4505,62 @@ export default function AdminDashboard() {
                                 <th className="py-2.5 px-3">Date</th>
                                 <th className="py-2.5 px-3">Billed</th>
                                 <th className="py-2.5 px-3">Paid</th>
+                                <th className="py-2.5 px-3">Actual Paid</th>
                                 <th className="py-2.5 px-3">Balance</th>
                                 <th className="py-2.5 px-3 text-right pr-4">Status</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {studentDues.map((due) => (
-                                <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
-                                  <td className="py-3 px-4">
-                                    <p className="font-semibold text-foreground truncate max-w-[130px]" title={due.due_title}>{due.due_title}</p>
-                                    {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[130px]" title={due.remarks}>{due.remarks}</p>}
-                                  </td>
-                                  <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
-                                  <td className="py-3 px-3 text-foreground">₹{parseFloat(due.final_amount).toLocaleString()}</td>
-                                  <td className="py-3 px-3 text-emerald-600 font-medium">₹{parseFloat(due.paid_amount).toLocaleString()}</td>
-                                  <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
-                                  <td className="py-3 px-3 text-right pr-4">
-                                    <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
-                                      due.status === "paid"
-                                        ? "bg-emerald-500/10 text-emerald-700"
-                                        : due.status === "partial"
-                                          ? "bg-amber-500/10 text-amber-700"
-                                          : due.status === "overdue"
-                                            ? "bg-rose-500/10 text-rose-700"
-                                            : "bg-blue-500/10 text-blue-700"
-                                    }`}>
-                                      {due.status}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
+                              {studentDues.map((due) => {
+                                const duePayments = payments.filter((p) => p.fee_due_id === due.id && p.status === "success");
+                                const actualAmtPaid = duePayments.reduce((sum, p) => {
+                                  const base = parseFloat(p.amount_paid);
+                                  const charges = parseFloat(p.gateway_charges || "0.00");
+                                  const gst = parseFloat(p.gateway_charges_gst || "0.00");
+                                  return sum + base + charges + gst;
+                                }, 0);
+
+                                return (
+                                  <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
+                                    <td className="py-3 px-4">
+                                      <p className="font-semibold text-foreground truncate max-w-[130px]" title={due.due_title}>{due.due_title}</p>
+                                      {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[130px]" title={due.remarks}>{due.remarks}</p>}
+                                    </td>
+                                    <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
+                                    <td className="py-3 px-3 text-foreground">₹{parseFloat(due.final_amount).toLocaleString()}</td>
+                                    <td className="py-3 px-3 text-emerald-600 font-medium">₹{parseFloat(due.paid_amount).toLocaleString()}</td>
+                                    <td className="py-3 px-3 text-emerald-700 font-semibold">
+                                      <div className="flex items-center gap-1.5">
+                                        <span>₹{actualAmtPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                        {duePayments.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setSelectedDueForReceiptDetails(due)}
+                                            className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
+                                            title="View payment breakdown & download receipt"
+                                          >
+                                            <Eye size={12} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
+                                    <td className="py-3 px-3 text-right pr-4">
+                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
+                                        due.status === "paid"
+                                          ? "bg-emerald-500/10 text-emerald-700"
+                                          : due.status === "partial"
+                                            ? "bg-amber-500/10 text-amber-700"
+                                            : due.status === "overdue"
+                                              ? "bg-rose-500/10 text-rose-700"
+                                              : "bg-blue-500/10 text-blue-700"
+                                      }`}>
+                                        {due.status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
@@ -4657,6 +4860,150 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Breakdown Modal */}
+      <AnimatePresence>
+        {selectedDueForReceiptDetails && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-card border border-border rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col relative text-foreground"
+            >
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={() => setSelectedDueForReceiptDetails(null)}
+                  className="p-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Header */}
+              <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                  <CreditCard size={24} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Actual Payment Breakdown</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{selectedDueForReceiptDetails.due_title}</p>
+                </div>
+              </div>
+
+              {/* Content Body */}
+              <div className="p-6 space-y-6">
+                {/* Due Billed breakdown */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Installment Structure Billed</h4>
+                  <div className="space-y-2.5 bg-muted/30 border border-border/40 p-4 rounded-2xl text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tuition Fee component:</span>
+                      <span className="font-semibold text-foreground">₹{parseFloat(selectedDueForReceiptDetails.tuition_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    {parseFloat(selectedDueForReceiptDetails.resource_fee) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Resource Fee component:</span>
+                        <span className="font-semibold text-foreground">₹{parseFloat(selectedDueForReceiptDetails.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                    {parseFloat(selectedDueForReceiptDetails.discount_applied) > 0 && (
+                      <div className="flex justify-between text-emerald-600 font-medium">
+                        <span>Discount Applied component:</span>
+                        <span>-₹{parseFloat(selectedDueForReceiptDetails.discount_applied).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-t border-border/60 pt-2.5 font-bold text-foreground text-sm">
+                      <span>Total Net Billed:</span>
+                      <span>₹{parseFloat(selectedDueForReceiptDetails.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Successful Payments List */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Recorded Transaction Allocations</h4>
+                  {(() => {
+                    const duePayments = payments.filter((p) => p.fee_due_id === selectedDueForReceiptDetails.id && p.status === "success");
+                    if (duePayments.length === 0) {
+                      return <p className="text-xs text-muted-foreground italic bg-muted/20 p-4 rounded-xl text-center">No successful transactions recorded for this due.</p>;
+                    }
+                    return (
+                      <div className="space-y-3">
+                        {duePayments.map((p) => {
+                          const base = parseFloat(p.amount_paid);
+                          const charges = parseFloat(p.gateway_charges || "0.00");
+                          const gst = parseFloat(p.gateway_charges_gst || "0.00");
+                          const total = base + charges + gst;
+
+                          return (
+                            <div key={p.id} className="border border-border/50 rounded-2xl p-4 bg-card shadow-sm space-y-3">
+                              <div className="flex items-center justify-between text-xs border-b border-border/40 pb-2">
+                                <span className="font-bold text-foreground">AMH-REC-{p.id}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">{new Date(p.paid_at || p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+                              </div>
+                              <div className="space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Tuition Cleared (School):</span>
+                                  <span className="font-semibold text-foreground">₹{base.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                {charges > 0 && (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Gateway Convenience Charges (2%):</span>
+                                      <span className="font-medium text-foreground">₹{charges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">GST on Gateway Charges (18%):</span>
+                                      <span className="font-medium text-foreground">₹{gst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                  </>
+                                )}
+                                <div className="flex justify-between border-t border-border/40 pt-2 font-bold text-primary text-sm">
+                                  <span>Actual Amount Paid:</span>
+                                  <span>₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex justify-between text-[10px] text-muted-foreground pt-1">
+                                  <span>Mode: <strong className="uppercase">{p.payment_mode.replace("_", " ")}</strong></span>
+                                  {p.remarks && <span className="italic truncate max-w-[180px]">Note: {p.remarks}</span>}
+                                </div>
+                              </div>
+                              <div className="flex justify-end pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handlePrintReceipt(p)}
+                                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-all"
+                                >
+                                  Download Printable Receipt
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-border bg-muted/20 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDueForReceiptDetails(null)}
+                  className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-xs hover:shadow-md transition-all"
+                >
+                  Close View
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
