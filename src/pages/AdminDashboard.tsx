@@ -151,6 +151,7 @@ export default function AdminDashboard() {
   const [selectedStudentForView, setSelectedStudentForView] = useState<StudentResponse | null>(null);
   const [selectedParentForView, setSelectedParentForView] = useState<Profile | null>(null);
   const [selectedDueForReceiptDetails, setSelectedDueForReceiptDetails] = useState<FeeDueResponse | null>(null);
+  const [selectedPaymentForDetails, setSelectedPaymentForDetails] = useState<PaymentResponse | null>(null);
   const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
 
   // Form inputs
@@ -988,6 +989,9 @@ export default function AdminDashboard() {
 
     const hasCharges = gatewayCharges > 0;
     const due = allDues.find(d => d.id === payment.fee_due_id);
+    const billedAmount = due ? parseFloat(due.final_amount) : 0;
+    const balance = due ? parseFloat(due.balance) : 0;
+    const otherPaid = Math.max(0, billedAmount - baseAmount - balance);
 
     invoiceWindow.document.write(`
       <html>
@@ -1058,6 +1062,23 @@ export default function AdminDashboard() {
                 <span>Net Installment Amount Billed:</span>
                 <span>₹${parseFloat(due.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
               </div>
+              ${otherPaid > 0 ? `
+              <div class="breakdown-row" style="color: #475569; margin-top: 6px;">
+                <span>Previously Settled / Paid at Desk:</span>
+                <span style="font-weight: 500;">₹${otherPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              ${balance > 0 ? `
+              <div class="breakdown-row" style="color: #b45309; margin-top: 4px;">
+                <span>Remaining Installment Balance:</span>
+                <span style="font-weight: 500;">₹${balance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : `
+              <div class="breakdown-row" style="color: #15803d; font-weight: 600; margin-top: 4px;">
+                <span>Installment Status:</span>
+                <span>Fully Paid / Settled</span>
+              </div>
+              `}
             </div>
             ` : ""}
 
@@ -1542,7 +1563,7 @@ export default function AdminDashboard() {
                   setActiveTab(type);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-colors ${activeTab === type
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-colors text-left ${activeTab === type
                     ? "bg-primary/10 text-primary border-l-4 border-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
@@ -3837,19 +3858,15 @@ export default function AdminDashboard() {
                                       <th className="pb-2.5">Student</th>
                                       <th className="pb-2.5">Amount</th>
                                       <th className="pb-2.5">Mode</th>
-                                      <th className="pb-2.5">Remarks / IDs</th>
                                       <th className="pb-2.5">Date</th>
-                                      <th className="pb-2.5 text-right">Status</th>
+                                      <th className="pb-2.5">Status</th>
+                                      <th className="pb-2.5 text-right pr-2">Details</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {filteredPayments.slice((paymentsPage - 1) * 10, paymentsPage * 10).map((p) => {
                                       const student = students.find((s) => s.id === p.student_id);
                                       const baseAmt = parseFloat(p.amount_paid);
-                                      const gatewayCharges = parseFloat(p.gateway_charges || "0.00");
-                                      const gatewayChargesGst = parseFloat(p.gateway_charges_gst || "0.00");
-                                      const totalAmt = parseFloat(p.total_amount_paid || p.amount_paid);
-                                      const totalCharges = gatewayCharges + gatewayChargesGst;
 
                                       return (
                                         <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
@@ -3857,23 +3874,12 @@ export default function AdminDashboard() {
                                             <p className="font-semibold text-foreground">{student ? student.student_name : `Student ID: ${p.student_id}`}</p>
                                             <p className="text-[9px] text-muted-foreground font-mono">{student ? student.admission_number : "N/A"}</p>
                                           </td>
-                                          <td className="py-2.5">
-                                            <p className="font-bold text-foreground">₹{totalAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
-                                            {totalCharges > 0 ? (
-                                              <p className="text-[9px] text-muted-foreground">
-                                                Base: ₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })} | Charges: ₹{totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                              </p>
-                                            ) : (
-                                              <p className="text-[9px] text-muted-foreground">Desk payment (no fees)</p>
-                                            )}
+                                          <td className="py-2.5 font-bold text-foreground">
+                                            ₹{baseAmt.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                                           </td>
                                           <td className="py-2.5 uppercase text-[9px] font-semibold text-muted-foreground">{p.payment_mode.replace("_", " ")}</td>
-                                          <td className="py-2.5 max-w-[150px] truncate" title={p.remarks || p.gateway_payment_id || ""}>
-                                            <p className="text-foreground truncate">{p.remarks || "No remarks"}</p>
-                                            {p.gateway_payment_id && <p className="text-[9px] text-muted-foreground font-mono truncate">ID: {p.gateway_payment_id}</p>}
-                                          </td>
                                           <td className="py-2.5 text-muted-foreground font-mono text-[9px]">{new Date(p.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</td>
-                                          <td className="py-2.5 text-right">
+                                          <td className="py-2.5">
                                             <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${
                                               p.status === "success"
                                                 ? "bg-emerald-500/10 text-emerald-700"
@@ -3883,6 +3889,16 @@ export default function AdminDashboard() {
                                             }`}>
                                               {p.status}
                                             </span>
+                                          </td>
+                                          <td className="py-2.5 text-right pr-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => setSelectedPaymentForDetails(p)}
+                                              className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
+                                              title="View transaction details & download receipt"
+                                            >
+                                              <Eye size={12} />
+                                            </button>
                                           </td>
                                         </tr>
                                       );
@@ -5007,6 +5023,159 @@ export default function AdminDashboard() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Selected Payment Details Modal */}
+      <AnimatePresence>
+        {selectedPaymentForDetails && (() => {
+          const p = selectedPaymentForDetails;
+          const student = students.find((s) => s.id === p.student_id);
+          const studentName = student ? student.student_name : "Student";
+          const parent = profiles.find((prof) => prof.id === student?.parent_id);
+          const due = allDues.find((d) => d.id === p.fee_due_id);
+
+          const base = parseFloat(p.amount_paid);
+          const charges = parseFloat(p.gateway_charges || "0.00");
+          const gst = parseFloat(p.gateway_charges_gst || "0.00");
+          const total = base + charges + gst;
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/85 backdrop-blur-md">
+              <motion.div
+                initial={{ scale: 0.95, y: 15 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 15 }}
+                className="bg-card border border-border rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col relative text-foreground"
+              >
+                <div className="absolute top-4 right-4 z-10">
+                  <button
+                    onClick={() => setSelectedPaymentForDetails(null)}
+                    className="p-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Header */}
+                <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                    <CheckCircle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">Transaction Details</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">Receipt: AMH-REC-{p.id}</p>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-5 text-xs">
+                  {/* Payer and Student Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-muted/30 border border-border/40 p-4 rounded-2xl space-y-1">
+                      <span className="font-bold text-[9px] uppercase tracking-wider text-muted-foreground block">Payer Info</span>
+                      <p className="font-semibold text-foreground">{parent ? parent.full_name : "N/A"}</p>
+                      <p className="text-muted-foreground">{parent ? parent.email : "N/A"}</p>
+                      <p className="text-muted-foreground">{parent ? parent.phone : "N/A"}</p>
+                    </div>
+                    <div className="bg-muted/30 border border-border/40 p-4 rounded-2xl space-y-1">
+                      <span className="font-bold text-[9px] uppercase tracking-wider text-muted-foreground block">Student Details</span>
+                      <p className="font-semibold text-foreground">{studentName}</p>
+                      <p className="text-muted-foreground font-mono text-[10px]">Adm: {student ? student.admission_number : "N/A"}</p>
+                      <p className="text-muted-foreground">Class: {student ? student.class_name : "N/A"}</p>
+                    </div>
+                  </div>
+
+                  {/* Fee Due breakdown */}
+                  {due && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Billed Installment Structure</h4>
+                      <div className="space-y-2 bg-muted/20 border border-border/40 p-4 rounded-2xl">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Fee Installment:</span>
+                          <span className="font-semibold text-foreground">{due.due_title}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Tuition Fee component:</span>
+                          <span className="font-medium text-foreground">₹{parseFloat(due.tuition_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        {parseFloat(due.resource_fee) > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Resource Fee component:</span>
+                            <span className="font-medium text-foreground">₹{parseFloat(due.resource_fee).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        {parseFloat(due.discount_applied) > 0 && (
+                          <div className="flex justify-between text-emerald-600 font-medium">
+                            <span>Discount Applied:</span>
+                            <span>-₹{parseFloat(due.discount_applied).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between border-t border-border/60 pt-2 font-bold text-foreground text-xs mt-1">
+                          <span>Net Billed Amount:</span>
+                          <span>₹{parseFloat(due.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Breakdown */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Transaction Settlement Allocation</h4>
+                    <div className="space-y-2.5 bg-card border border-border/50 p-4 rounded-2xl">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tuition Cleared (This payment):</span>
+                        <span className="font-semibold text-foreground">₹{base.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      {charges > 0 && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Convenience Charges (2%):</span>
+                            <span className="font-medium text-foreground">₹{charges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">GST on Gateway Charges (18%):</span>
+                            <span className="font-medium text-foreground">₹{gst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between border-t border-border/60 pt-2.5 font-bold text-primary text-sm mt-1">
+                        <span>Actual Amount Paid:</span>
+                        <span>₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
+                        <span>Method: <strong className="uppercase">{p.payment_mode.replace("_", " ")}</strong></span>
+                        <span>Gateway ID: <strong className="font-mono">{p.gateway_payment_id || "Desk Receipt"}</strong></span>
+                      </div>
+                      {p.remarks && (
+                        <div className="text-[10px] text-muted-foreground bg-muted/40 p-2 rounded-lg italic">
+                          Remarks: {p.remarks}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-6 border-t border-border bg-muted/20 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => handlePrintReceipt(p)}
+                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-all"
+                  >
+                    Download Printable Receipt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaymentForDetails(null)}
+                    className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-xs hover:shadow-md transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

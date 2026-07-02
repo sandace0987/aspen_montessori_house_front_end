@@ -435,6 +435,9 @@ export default function ParentLogin() {
 
     const hasCharges = gatewayCharges > 0;
     const due = dues.find(d => d.id === payment.fee_due_id);
+    const billedAmount = due ? parseFloat(due.final_amount) : 0;
+    const balance = due ? parseFloat(due.balance) : 0;
+    const otherPaid = Math.max(0, billedAmount - baseAmount - balance);
 
     invoiceWindow.document.write(`
       <html>
@@ -481,7 +484,7 @@ export default function ParentLogin() {
           </div>
           <div class="section">
             <strong>Student Account:</strong> ${studentName}
-
+ 
             ${due ? `
             <div style="margin-top: 16px; margin-bottom: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
               <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 14px;">Billed Installment Breakdown:</strong>
@@ -505,6 +508,23 @@ export default function ParentLogin() {
                 <span>Net Installment Amount Billed:</span>
                 <span>₹${parseFloat(due.final_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
               </div>
+              ${otherPaid > 0 ? `
+              <div class="breakdown-row" style="color: #475569; margin-top: 6px;">
+                <span>Previously Settled / Paid at Desk:</span>
+                <span style="font-weight: 500;">₹${otherPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : ""}
+              ${balance > 0 ? `
+              <div class="breakdown-row" style="color: #b45309; margin-top: 4px;">
+                <span>Remaining Installment Balance:</span>
+                <span style="font-weight: 500;">₹${balance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : `
+              <div class="breakdown-row" style="color: #15803d; font-weight: 600; margin-top: 4px;">
+                <span>Installment Status:</span>
+                <span>Fully Paid / Settled</span>
+              </div>
+              `}
             </div>
             ` : ""}
 
