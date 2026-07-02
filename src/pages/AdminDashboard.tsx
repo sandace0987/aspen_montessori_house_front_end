@@ -206,7 +206,9 @@ export default function AdminDashboard() {
   });
   const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
   const [studentSelectSearch, setStudentSelectSearch] = useState("");
+  const [studentSelectOpen, setStudentSelectOpen] = useState(false);
   const [subscriptionSelectSearch, setSubscriptionSelectSearch] = useState("");
+  const [subscriptionSelectOpen, setSubscriptionSelectOpen] = useState(false);
 
   // Student Fee Account subscription form
   const [accountForm, setAccountForm] = useState({
@@ -3141,45 +3143,96 @@ export default function AdminDashboard() {
                       <BookOpen size={16} className="text-primary" /> {editingAccountId ? "Edit subscription" : "Subscribe student to fee plan"}
                     </h3>
                     <form onSubmit={handleLinkAccount} className="space-y-3">
-                      <div>
+                      <div className="relative">
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Student</label>
-                        {!editingAccountId && (
-                          <input
-                            type="text"
-                            placeholder="🔍 Type to search student..."
-                            value={studentSelectSearch}
-                            onChange={(e) => setStudentSelectSearch(e.target.value)}
-                            className="w-full px-3 py-1.5 mb-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                          />
+                        {!editingAccountId ? (
+                          <>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="🔍 Search by name, admission no. or class..."
+                                value={studentSelectSearch}
+                                onFocus={() => setStudentSelectOpen(true)}
+                                onChange={(e) => {
+                                  setStudentSelectSearch(e.target.value);
+                                  setStudentSelectOpen(true);
+                                  // clear selection if user clears the field
+                                  if (!e.target.value) {
+                                    setAccountForm({ ...accountForm, student_id: 0, fee_plan_id: 0, payment_cycle: "quarterly" });
+                                  }
+                                }}
+                                onBlur={() => setTimeout(() => setStudentSelectOpen(false), 150)}
+                                className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none pr-7"
+                              />
+                              {accountForm.student_id > 0 && (
+                                <button type="button" onClick={() => {
+                                  setStudentSelectSearch("");
+                                  setAccountForm({ ...accountForm, student_id: 0, fee_plan_id: 0, payment_cycle: "quarterly" });
+                                }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                  <X size={12} />
+                                </button>
+                              )}
+                            </div>
+                            {studentSelectOpen && (
+                              <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                                {students.filter(s => {
+                                  if (s.is_active === false) return false;
+                                  const q = studentSelectSearch.toLowerCase().trim();
+                                  if (!q) return true;
+                                  return s.student_name.toLowerCase().includes(q) ||
+                                    s.admission_number.toLowerCase().includes(q) ||
+                                    s.class_name.toLowerCase().includes(q);
+                                }).length === 0 ? (
+                                  <div className="px-3 py-2 text-xs text-muted-foreground">No students found</div>
+                                ) : (
+                                  students.filter(s => {
+                                    if (s.is_active === false) return false;
+                                    const q = studentSelectSearch.toLowerCase().trim();
+                                    if (!q) return true;
+                                    return s.student_name.toLowerCase().includes(q) ||
+                                      s.admission_number.toLowerCase().includes(q) ||
+                                      s.class_name.toLowerCase().includes(q);
+                                  }).map(s => (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      onMouseDown={() => {
+                                        setAccountForm({ ...accountForm, student_id: s.id, fee_plan_id: 0, payment_cycle: "quarterly" });
+                                        setStudentSelectSearch(`${s.student_name} [${s.admission_number}]`);
+                                        setStudentSelectOpen(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors flex items-center justify-between ${accountForm.student_id === s.id ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                    >
+                                      <span>{s.student_name} <span className="text-muted-foreground font-normal">[{s.admission_number}]</span></span>
+                                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground ml-2 shrink-0">{s.class_name}</span>
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                            {/* Selected student detail badge */}
+                            {accountForm.student_id > 0 && (() => {
+                              const sel = students.find(s => s.id === accountForm.student_id);
+                              return sel ? (
+                                <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-xl">
+                                  <span className="text-[10px] font-semibold text-primary">{sel.student_name}</span>
+                                  <span className="text-[10px] text-muted-foreground">[{sel.admission_number}]</span>
+                                  <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">{sel.class_name}</span>
+                                </div>
+                              ) : null;
+                            })()}
+                          </>
+                        ) : (
+                          /* In edit mode, show a locked read-only badge */
+                          (() => {
+                            const sel = students.find(s => s.id === accountForm.student_id);
+                            return (
+                              <div className="w-full px-3 py-2 rounded-xl bg-muted/50 border-0 text-xs text-muted-foreground opacity-60 cursor-not-allowed flex items-center gap-2">
+                                {sel ? <>{sel.student_name} [{sel.admission_number}]<span className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{sel.class_name}</span></> : "Student locked"}
+                              </div>
+                            );
+                          })()
                         )}
-                        <select
-                          required
-                          disabled={!!editingAccountId}
-                          value={accountForm.student_id}
-                          onChange={(e) => {
-                            const studId = Number(e.target.value);
-                            setAccountForm({
-                              ...accountForm,
-                              student_id: studId,
-                              fee_plan_id: 0, // Reset selected plan to prevent mismatch
-                              payment_cycle: "quarterly" // Default cycle reset
-                            });
-                          }}
-                          className={`w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none ${editingAccountId ? "opacity-60 cursor-not-allowed" : ""}`}
-                        >
-                          <option value="0">Select Student</option>
-                          {students.filter(s => {
-                            const activeCheck = s.is_active !== false;
-                            if (!activeCheck) return false;
-                            const q = studentSelectSearch.toLowerCase().trim();
-                            if (!q) return true;
-                            return s.student_name.toLowerCase().includes(q) ||
-                              s.admission_number.toLowerCase().includes(q) ||
-                              s.class_name.toLowerCase().includes(q);
-                          }).map(s => (
-                            <option key={s.id} value={s.id}>{s.student_name} [{s.admission_number}] (Class: {s.class_name})</option>
-                          ))}
-                        </select>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Fee Plan</label>
@@ -3556,50 +3609,99 @@ export default function AdminDashboard() {
                       <Calculator size={16} className="text-primary" /> Generate fee installments
                     </h3>
                     <form onSubmit={handleGenerateDues} className="space-y-3">
-                      <div>
+                      <div className="relative">
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Student Fee Subscription</label>
-                        <input
-                          type="text"
-                          placeholder="🔍 Type to search subscription..."
-                          value={subscriptionSelectSearch}
-                          onChange={(e) => setSubscriptionSelectSearch(e.target.value)}
-                          className="w-full px-3 py-1.5 mb-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                        />
-                        <select
-                          required
-                          value={generateForm.fee_account_id}
-                          onChange={(e) => {
-                            const accId = Number(e.target.value);
-                            const selectedAcc = feeAccounts.find(a => a.id === accId);
-                            const cycle = selectedAcc?.payment_cycle || "quarterly";
-                            const defaultCount = cycle === "yearly" ? 1 : cycle === "quarterly" ? (selectedAcc?.installments ?? 3) : 12;
-                            setGenerateForm({ ...generateForm, fee_account_id: accId, starting_installment: 1, installment_count: defaultCount });
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                        >
-                          <option value="0">Select Fee Subscription Account</option>
-                          {feeAccounts.filter(a => {
-                            const student = students.find(s => s.id === a.student_id);
-                            const activeCheck = student && student.is_active !== false && a.is_active !== false;
-                            if (!activeCheck) return false;
-
-                            const q = subscriptionSelectSearch.toLowerCase().trim();
-                            if (!q) return true;
-
-                            const name = student.student_name.toLowerCase();
-                            const adm = student.admission_number.toLowerCase();
-                            const cycle = a.payment_cycle.toLowerCase();
-                            return name.includes(q) || adm.includes(q) || cycle.includes(q);
-                          }).map(a => {
-                            const sObj = students.find(s => s.id === a.student_id);
-                            const name = sObj ? `${sObj.student_name} [${sObj.admission_number}]` : "Student";
-                            return (
-                              <option key={a.id} value={a.id}>
-                                {name} ({a.payment_cycle === "quarterly" ? `Quarterly - ${a.installments || 3} Inst` : a.payment_cycle})
-                              </option>
-                            );
-                          })}
-                        </select>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="🔍 Search by name, admission no. or cycle..."
+                            value={subscriptionSelectSearch}
+                            onFocus={() => setSubscriptionSelectOpen(true)}
+                            onChange={(e) => {
+                              setSubscriptionSelectSearch(e.target.value);
+                              setSubscriptionSelectOpen(true);
+                              if (!e.target.value) {
+                                setGenerateForm({ ...generateForm, fee_account_id: 0, starting_installment: 1, installment_count: 3 });
+                              }
+                            }}
+                            onBlur={() => setTimeout(() => setSubscriptionSelectOpen(false), 150)}
+                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none pr-7"
+                          />
+                          {generateForm.fee_account_id > 0 && (
+                            <button type="button" onClick={() => {
+                              setSubscriptionSelectSearch("");
+                              setGenerateForm({ ...generateForm, fee_account_id: 0, starting_installment: 1, installment_count: 3 });
+                            }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                        {subscriptionSelectOpen && (
+                          <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                            {feeAccounts.filter(a => {
+                              const student = students.find(s => s.id === a.student_id);
+                              if (!student || student.is_active === false || a.is_active === false) return false;
+                              const q = subscriptionSelectSearch.toLowerCase().trim();
+                              if (!q) return true;
+                              return student.student_name.toLowerCase().includes(q) ||
+                                student.admission_number.toLowerCase().includes(q) ||
+                                a.payment_cycle.toLowerCase().includes(q) ||
+                                student.class_name.toLowerCase().includes(q);
+                            }).length === 0 ? (
+                              <div className="px-3 py-2 text-xs text-muted-foreground">No active subscriptions found</div>
+                            ) : (
+                              feeAccounts.filter(a => {
+                                const student = students.find(s => s.id === a.student_id);
+                                if (!student || student.is_active === false || a.is_active === false) return false;
+                                const q = subscriptionSelectSearch.toLowerCase().trim();
+                                if (!q) return true;
+                                return student.student_name.toLowerCase().includes(q) ||
+                                  student.admission_number.toLowerCase().includes(q) ||
+                                  a.payment_cycle.toLowerCase().includes(q) ||
+                                  student.class_name.toLowerCase().includes(q);
+                              }).map(a => {
+                                const sObj = students.find(s => s.id === a.student_id);
+                                const label = sObj ? `${sObj.student_name} [${sObj.admission_number}]` : "Student";
+                                const cycleLabel = a.payment_cycle === "quarterly" ? `Quarterly - ${a.installments || 3} Inst` : a.payment_cycle;
+                                return (
+                                  <button
+                                    key={a.id}
+                                    type="button"
+                                    onMouseDown={() => {
+                                      const cycle = a.payment_cycle || "quarterly";
+                                      const defaultCount = cycle === "yearly" ? 1 : cycle === "quarterly" ? (a.installments ?? 3) : 12;
+                                      setGenerateForm({ ...generateForm, fee_account_id: a.id, starting_installment: 1, installment_count: defaultCount });
+                                      setSubscriptionSelectSearch(`${label} (${cycleLabel})`);
+                                      setSubscriptionSelectOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors flex items-center justify-between ${generateForm.fee_account_id === a.id ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                  >
+                                    <span>{sObj?.student_name} <span className="text-muted-foreground font-normal">[{sObj?.admission_number}]</span></span>
+                                    <span className="flex items-center gap-1.5 shrink-0 ml-2">
+                                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{sObj?.class_name}</span>
+                                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full capitalize">{cycleLabel}</span>
+                                    </span>
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                        {/* Selected subscription detail badge */}
+                        {generateForm.fee_account_id > 0 && (() => {
+                          const selAcc = feeAccounts.find(a => a.id === generateForm.fee_account_id);
+                          const selStu = selAcc ? students.find(s => s.id === selAcc.student_id) : null;
+                          if (!selAcc || !selStu) return null;
+                          const cycleLabel = selAcc.payment_cycle === "quarterly" ? `Quarterly · ${selAcc.installments || 3} terms` : selAcc.payment_cycle;
+                          return (
+                            <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-xl flex-wrap">
+                              <span className="text-[10px] font-semibold text-primary">{selStu.student_name}</span>
+                              <span className="text-[10px] text-muted-foreground">[{selStu.admission_number}]</span>
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{selStu.class_name}</span>
+                              <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold capitalize">{cycleLabel}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Period Cycle Start Date</label>
