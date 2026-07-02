@@ -2723,7 +2723,7 @@ export default function AdminDashboard() {
                           onChange={(e) => setPlanForm({ ...planForm, frequency: e.target.value as any })}
                           className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <option value="monthly">Monthly (Daycare only)</option>
+                          <option value="monthly">Monthly (Daycare &amp; Toddlers)</option>
                           <option value="quarterly">Quarterly (Montessori only)</option>
                           <option value="yearly">Yearly (Montessori only)</option>
                         </select>
@@ -2742,7 +2742,7 @@ export default function AdminDashboard() {
 
                       <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] text-muted-foreground space-y-1">
                         <p className="font-semibold text-primary">Frequency Constraints Reminder:</p>
-                        <p>• Daycare cycles MUST be monthly</p>
+                        <p>• Daycare &amp; Toddler cycles MUST be monthly</p>
                         <p>• Montessori plans MUST be quarterly or yearly</p>
                       </div>
 
