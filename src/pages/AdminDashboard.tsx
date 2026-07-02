@@ -1886,7 +1886,11 @@ export default function AdminDashboard() {
                           <option value="Montessori-2">Montessori-2</option>
                           <option value="Montessori-3">Montessori-3</option>
                           <option value="Toddlers">Toddlers</option>
-                          <option value="Daycare">Daycare</option>
+                          <option value="Daycare 2hrs">Daycare 2hrs</option>
+                          <option value="Daycare 3hrs">Daycare 3hrs</option>
+                          <option value="Daycare 4hrs">Daycare 4hrs</option>
+                          <option value="Daycare 5hrs">Daycare 5hrs</option>
+                          <option value="Daycare 6hrs">Daycare 6hrs</option>
                         </select>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -2656,10 +2660,14 @@ export default function AdminDashboard() {
                               "Montessori-2": "mont2",
                               "Montessori-3": "mont3",
                               "Toddlers": "toddler",
-                              "Daycare": "daycare",
+                              "Daycare 2hrs": "daycare",
+                              "Daycare 3hrs": "daycare",
+                              "Daycare 4hrs": "daycare",
+                              "Daycare 5hrs": "daycare",
+                              "Daycare 6hrs": "daycare",
                             };
                             // Auto-set frequency: Daycare → monthly, Montessori → yearly default
-                            const defaultFreq = cls === "Daycare" ? "monthly" : "yearly";
+                            const defaultFreq = cls.startsWith("Daycare") ? "monthly" : "yearly";
                             setPlanForm({ ...planForm, class_name: cls, program_type: slugMap[cls] || "", frequency: defaultFreq as any });
                           }}
                           className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none disabled:opacity-60 disabled:cursor-not-allowed"
@@ -2669,7 +2677,11 @@ export default function AdminDashboard() {
                           <option value="Montessori-2">Montessori-2</option>
                           <option value="Montessori-3">Montessori-3</option>
                           <option value="Toddlers">Toddlers</option>
-                          <option value="Daycare">Daycare</option>
+                          <option value="Daycare 2hrs">Daycare 2hrs</option>
+                          <option value="Daycare 3hrs">Daycare 3hrs</option>
+                          <option value="Daycare 4hrs">Daycare 4hrs</option>
+                          <option value="Daycare 5hrs">Daycare 5hrs</option>
+                          <option value="Daycare 6hrs">Daycare 6hrs</option>
                         </select>
                       </div>
                       <div>
@@ -2742,7 +2754,7 @@ export default function AdminDashboard() {
 
                       <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] text-muted-foreground space-y-1">
                         <p className="font-semibold text-primary">Frequency Constraints Reminder:</p>
-                        <p>• Daycare &amp; Toddler cycles MUST be monthly</p>
+                        <p>• Daycare (all tiers) &amp; Toddler cycles MUST be monthly</p>
                         <p>• Montessori plans MUST be quarterly or yearly</p>
                       </div>
 
@@ -3255,11 +3267,16 @@ export default function AdminDashboard() {
                           {(() => {
                             const selectedSubStudent = students.find(s => s.id === Number(accountForm.student_id));
                             const isToddler = (selectedSubStudent?.class_name || "").toLowerCase() === "toddlers";
+                            const isDaycareStudent = (selectedSubStudent?.class_name || "").toLowerCase().startsWith("daycare");
                             const filteredPlans = selectedSubStudent
-                              ? feePlans.filter(p =>
-                                (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
-                                (p.program_type === "daycare" && !isToddler)
-                              )
+                              ? feePlans.filter(p => {
+                                  const studentClassLower = selectedSubStudent.class_name.toLowerCase();
+                                  const planClassLower = (p.class_name || "").toLowerCase();
+                                  if (isDaycareStudent) {
+                                    return planClassLower === studentClassLower;
+                                  }
+                                  return planClassLower === studentClassLower || (p.program_type === "daycare" && !isToddler);
+                                })
                               : feePlans;
 
                             return filteredPlans.map(p => (
@@ -3272,11 +3289,16 @@ export default function AdminDashboard() {
                         {(() => {
                           const selectedSubStudent = students.find(s => s.id === Number(accountForm.student_id));
                           const isToddler = (selectedSubStudent?.class_name || "").toLowerCase() === "toddlers";
+                          const isDaycareStudent = (selectedSubStudent?.class_name || "").toLowerCase().startsWith("daycare");
                           const filteredPlans = selectedSubStudent
-                            ? feePlans.filter(p =>
-                              (p.class_name || "").toLowerCase() === (selectedSubStudent.class_name || "").toLowerCase() ||
-                              (p.program_type === "daycare" && !isToddler)
-                            )
+                            ? feePlans.filter(p => {
+                                const studentClassLower = selectedSubStudent.class_name.toLowerCase();
+                                const planClassLower = (p.class_name || "").toLowerCase();
+                                if (isDaycareStudent) {
+                                  return planClassLower === studentClassLower;
+                                }
+                                return planClassLower === studentClassLower || (p.program_type === "daycare" && !isToddler);
+                              })
                             : feePlans;
 
                           if (selectedSubStudent && filteredPlans.length === 0) {
@@ -4289,7 +4311,11 @@ export default function AdminDashboard() {
                         <option value="Montessori-2">Montessori-2</option>
                         <option value="Montessori-3">Montessori-3</option>
                         <option value="Toddlers">Toddlers</option>
-                        <option value="Daycare">Daycare</option>
+                        <option value="Daycare 2hrs">Daycare 2hrs</option>
+                        <option value="Daycare 3hrs">Daycare 3hrs</option>
+                        <option value="Daycare 4hrs">Daycare 4hrs</option>
+                        <option value="Daycare 5hrs">Daycare 5hrs</option>
+                        <option value="Daycare 6hrs">Daycare 6hrs</option>
                       </select>
                     </div>
 
@@ -4532,7 +4558,11 @@ export default function AdminDashboard() {
                               <option value="Montessori-2">Montessori-2</option>
                               <option value="Montessori-3">Montessori-3</option>
                               <option value="Toddlers">Toddlers</option>
-                              <option value="Daycare">Daycare</option>
+                              <option value="Daycare 2hrs">Daycare 2hrs</option>
+                              <option value="Daycare 3hrs">Daycare 3hrs</option>
+                              <option value="Daycare 4hrs">Daycare 4hrs</option>
+                              <option value="Daycare 5hrs">Daycare 5hrs</option>
+                              <option value="Daycare 6hrs">Daycare 6hrs</option>
                             </select>
                           </div>
 
