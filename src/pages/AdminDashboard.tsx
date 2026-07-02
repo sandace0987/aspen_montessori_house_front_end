@@ -153,6 +153,7 @@ export default function AdminDashboard() {
   const [selectedDueForReceiptDetails, setSelectedDueForReceiptDetails] = useState<FeeDueResponse | null>(null);
   const [selectedPaymentForDetails, setSelectedPaymentForDetails] = useState<PaymentResponse | null>(null);
   const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
+  const [hideFailedPayments, setHideFailedPayments] = useState(true);
 
   // Form inputs
   // Student form
@@ -4128,7 +4129,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-muted-foreground italic py-8 text-center">No payment transactions recorded yet.</p>
                       ) : (
                         <>
-                          <div className="mb-4">
+                          <div className="mb-4 flex flex-wrap items-center gap-4">
                             <input
                               type="text"
                               value={paymentSearchQuery}
@@ -4139,10 +4140,25 @@ export default function AdminDashboard() {
                               placeholder="Search transactions (student, ID, mode, status...)"
                               className="w-full max-w-md px-3.5 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none transition-all"
                             />
+                            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={hideFailedPayments}
+                                onChange={(e) => {
+                                  setHideFailedPayments(e.target.checked);
+                                  setPaymentsPage(1);
+                                }}
+                                className="rounded bg-muted border-0 text-primary focus:ring-1 focus:ring-ring"
+                              />
+                              Hide failed transactions
+                            </label>
                           </div>
 
                           {(() => {
                             const filteredPayments = payments.filter((p) => {
+                              if (hideFailedPayments && p.status === "failed") {
+                                return false;
+                              }
                               const student = students.find((s) => s.id === p.student_id);
                               const query = paymentSearchQuery.toLowerCase().trim();
                               if (!query) return true;
@@ -4892,8 +4908,8 @@ export default function AdminDashboard() {
                                 return (
                                   <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
                                     <td className="py-3 px-4">
-                                      <p className="font-semibold text-foreground truncate max-w-[130px]" title={due.due_title}>{due.due_title}</p>
-                                      {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[130px]" title={due.remarks}>{due.remarks}</p>}
+                                      <p className="font-semibold text-foreground truncate max-w-[220px]" title={due.due_title}>{due.due_title}</p>
+                                      {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[220px]" title={due.remarks}>{due.remarks}</p>}
                                     </td>
                                     <td className="py-3 px-3 text-muted-foreground font-mono text-[10px]">{due.due_date}</td>
                                     <td className="py-3 px-3 font-semibold text-foreground">
