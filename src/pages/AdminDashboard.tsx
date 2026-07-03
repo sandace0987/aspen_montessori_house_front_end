@@ -87,6 +87,9 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [duesPage, setDuesPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
+  const [studentsPage, setStudentsPage] = useState(1);
+  const [parentsPage, setParentsPage] = useState(1);
+  const [accountsPage, setAccountsPage] = useState(1);
   const [hideInactiveStudents, setHideInactiveStudents] = useState(true);
   const [hideInactiveParents, setHideInactiveParents] = useState(true);
   const [hideInactiveAdmins, setHideInactiveAdmins] = useState(true);
