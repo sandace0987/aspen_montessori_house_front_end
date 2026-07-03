@@ -922,7 +922,7 @@ export default function AdminDashboard() {
         fee_account_id: Number(generateForm.fee_account_id),
         period_start: generateForm.period_start,
         starting_installment: 1,
-        installment_count: maxInstallments,
+        installment_count: Number(generateForm.installment_count),
         first_due_date: generateForm.first_due_date,
         remarks: generateForm.remarks || undefined
       });
@@ -3276,6 +3276,7 @@ export default function AdminDashboard() {
                             const isDaycareStudent = (selectedSubStudent?.class_name || "").toLowerCase().startsWith("daycare");
                             const filteredPlans = selectedSubStudent
                               ? feePlans.filter(p => {
+                                  if (!p.is_active) return false;
                                   const studentClassLower = selectedSubStudent.class_name.toLowerCase();
                                   const planClassLower = (p.class_name || "").toLowerCase();
                                   if (isDaycareStudent) {
@@ -3283,7 +3284,7 @@ export default function AdminDashboard() {
                                   }
                                   return planClassLower === studentClassLower || (p.program_type === "daycare" && !isToddler);
                                 })
-                              : feePlans;
+                              : feePlans.filter(p => p.is_active);
 
                             return filteredPlans.map(p => (
                               <option key={p.id} value={p.id}>
@@ -3298,6 +3299,7 @@ export default function AdminDashboard() {
                           const isDaycareStudent = (selectedSubStudent?.class_name || "").toLowerCase().startsWith("daycare");
                           const filteredPlans = selectedSubStudent
                             ? feePlans.filter(p => {
+                                if (!p.is_active) return false;
                                 const studentClassLower = selectedSubStudent.class_name.toLowerCase();
                                 const planClassLower = (p.class_name || "").toLowerCase();
                                 if (isDaycareStudent) {
@@ -3305,7 +3307,7 @@ export default function AdminDashboard() {
                                 }
                                 return planClassLower === studentClassLower || (p.program_type === "daycare" && !isToddler);
                               })
-                            : feePlans;
+                            : feePlans.filter(p => p.is_active);
 
                           if (selectedSubStudent && filteredPlans.length === 0) {
                             return (
@@ -3689,6 +3691,8 @@ export default function AdminDashboard() {
                                   student.class_name.toLowerCase().includes(q);
                               }).map(a => {
                                 const sObj = students.find(s => s.id === a.student_id);
+                                const plan = feePlans.find(p => p.id === a.fee_plan_id);
+                                const planName = plan ? plan.class_name : "Fee Plan";
                                 const label = sObj ? `${sObj.student_name} [${sObj.admission_number}]` : "Student";
                                 const cycleLabel = a.payment_cycle === "quarterly" ? `Quarterly - ${a.installments || 3} Inst` : a.payment_cycle;
                                 return (
@@ -3706,7 +3710,7 @@ export default function AdminDashboard() {
                                   >
                                     <span>{sObj?.student_name} <span className="text-muted-foreground font-normal">[{sObj?.admission_number}]</span></span>
                                     <span className="flex items-center gap-1.5 shrink-0 ml-2">
-                                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{sObj?.class_name}</span>
+                                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{planName}</span>
                                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full capitalize">{cycleLabel}</span>
                                     </span>
                                   </button>
@@ -3719,13 +3723,15 @@ export default function AdminDashboard() {
                         {generateForm.fee_account_id > 0 && (() => {
                           const selAcc = feeAccounts.find(a => a.id === generateForm.fee_account_id);
                           const selStu = selAcc ? students.find(s => s.id === selAcc.student_id) : null;
+                          const plan = selAcc ? feePlans.find(p => p.id === selAcc.fee_plan_id) : null;
+                          const planName = plan ? plan.class_name : "Fee Plan";
                           if (!selAcc || !selStu) return null;
                           const cycleLabel = selAcc.payment_cycle === "quarterly" ? `Quarterly · ${selAcc.installments || 3} terms` : selAcc.payment_cycle;
                           return (
                             <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-xl flex-wrap">
                               <span className="text-[10px] font-semibold text-primary">{selStu.student_name}</span>
                               <span className="text-[10px] text-muted-foreground">[{selStu.admission_number}]</span>
-                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{selStu.class_name}</span>
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{planName}</span>
                               <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold capitalize">{cycleLabel}</span>
                             </div>
                           );
@@ -3747,14 +3753,28 @@ export default function AdminDashboard() {
                         const cycle = selectedAcc?.payment_cycle || "quarterly";
                         const maxInstallments = cycle === "yearly" ? 1 : cycle === "quarterly" ? (selectedAcc?.installments ?? 3) : 12;
                         return (
-                          <div className="grid grid-cols-2 gap-4 bg-muted/40 p-3 rounded-2xl border border-border/50 text-xs">
-                            <div>
-                              <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Starting Installment</span>
-                              <span className="font-bold text-foreground">Term 1</span>
+                          <div className="space-y-3 bg-muted/40 p-3.5 rounded-2xl border border-border/50">
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Starting Installment</span>
+                                <span className="font-bold text-foreground">Term 1</span>
+                              </div>
+                              <div>
+                                <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Default Plan Limit</span>
+                                <span className="font-bold text-primary">{maxInstallments} Installment{maxInstallments > 1 ? "s" : ""}</span>
+                              </div>
                             </div>
                             <div>
-                              <span className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Total Installments</span>
-                              <span className="font-bold text-primary">{maxInstallments} Installment{maxInstallments > 1 ? "s" : ""}</span>
+                              <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Total Installments to Generate</label>
+                              <input
+                                type="number"
+                                required
+                                min={1}
+                                max={maxInstallments}
+                                value={generateForm.installment_count}
+                                onChange={(e) => setGenerateForm({ ...generateForm, installment_count: Number(e.target.value) })}
+                                className="w-full px-3 py-2 rounded-xl bg-background border border-border/80 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-semibold text-foreground transition-all"
+                              />
                             </div>
                           </div>
                         );
