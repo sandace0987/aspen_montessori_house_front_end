@@ -1970,7 +1970,10 @@ export default function AdminDashboard() {
                             type="text"
                             placeholder="Search students..."
                             value={studentSearch}
-                            onChange={(e) => setStudentSearch(e.target.value)}
+                            onChange={(e) => {
+                              setStudentSearch(e.target.value);
+                              setStudentsPage(1);
+                            }}
                             className="pl-8 pr-3 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none w-48 transition-all"
                           />
                         </div>
@@ -1979,7 +1982,10 @@ export default function AdminDashboard() {
                             id="hide-inactive-students-checkbox"
                             type="checkbox"
                             checked={hideInactiveStudents}
-                            onChange={(e) => setHideInactiveStudents(e.target.checked)}
+                            onChange={(e) => {
+                              setHideInactiveStudents(e.target.checked);
+                              setStudentsPage(1);
+                            }}
                             className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
                           />
                           <label htmlFor="hide-inactive-students-checkbox" className="text-xs font-semibold text-muted-foreground select-none cursor-pointer">
@@ -1996,7 +2002,10 @@ export default function AdminDashboard() {
                           <th className="pb-3">
                             <select
                               value={classFilter}
-                              onChange={(e) => setClassFilter(e.target.value)}
+                              onChange={(e) => {
+                                setClassFilter(e.target.value);
+                                setStudentsPage(1);
+                              }}
                               className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground focus:ring-0 outline-none cursor-pointer py-0 px-0 -ml-1"
                             >
                               <option value="All" className="bg-card text-foreground">Class (All)</option>
@@ -2008,7 +2017,10 @@ export default function AdminDashboard() {
                           <th className="pb-3">
                             <select
                               value={yearFilter}
-                              onChange={(e) => setYearFilter(e.target.value)}
+                              onChange={(e) => {
+                                setYearFilter(e.target.value);
+                                setStudentsPage(1);
+                              }}
                               className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground focus:ring-0 outline-none cursor-pointer py-0 px-0 -ml-1"
                             >
                               <option value="All" className="bg-card text-foreground">Academic Yr (All)</option>
@@ -2022,81 +2034,137 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {students.filter((student) => {
-                          const matchesActive = !hideInactiveStudents || student.is_active;
-                          const matchesClass = classFilter === "All" || student.class_name === classFilter;
-                          const matchesYear = yearFilter === "All" || student.academic_year === yearFilter;
-                          const query = studentSearch.toLowerCase().trim();
-                          const matchesQuery = !query ||
-                            student.student_name.toLowerCase().includes(query) ||
-                            student.admission_number.toLowerCase().includes(query) ||
-                            (student.class_name || "").toLowerCase().includes(query);
-                          return matchesActive && matchesClass && matchesYear && matchesQuery;
-                        }).map((student) => (
-                          <tr
-                            key={student.id}
-                            onClick={(e) => {
-                              if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest("a")) return;
-                              setSelectedStudentForView(student);
-                            }}
-                            className={`border-b border-border/50 last:border-0 transition-colors cursor-pointer ${student.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}
-                          >
-                            <td className="py-3 font-semibold text-foreground font-mono">{student.admission_number}</td>
-                            <td className="py-3 text-foreground">{student.student_name}</td>
-                            <td className="py-3 text-muted-foreground">{student.class_name}</td>
-                            <td className="py-3 text-muted-foreground">{student.academic_year}</td>
+                        {(() => {
+                          const filteredStudents = students.filter((student) => {
+                            const matchesActive = !hideInactiveStudents || student.is_active;
+                            const matchesClass = classFilter === "All" || student.class_name === classFilter;
+                            const matchesYear = yearFilter === "All" || student.academic_year === yearFilter;
+                            const query = studentSearch.toLowerCase().trim();
+                            const matchesQuery = !query ||
+                              student.student_name.toLowerCase().includes(query) ||
+                              student.admission_number.toLowerCase().includes(query) ||
+                              (student.class_name || "").toLowerCase().includes(query);
+                            return matchesActive && matchesClass && matchesYear && matchesQuery;
+                          });
 
-                            <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${student.is_active
-                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                                }`}>
-                                {student.is_active ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              <div className="flex gap-2 justify-end">
-                                <button
-                                  onClick={() => {
-                                    setEditingStudentId(student.id);
-                                    setStudentForm({
-                                      admission_number: student.admission_number,
-                                      student_name: student.student_name,
-                                      date_of_birth: student.date_of_birth,
-                                      class_name: student.class_name,
-                                      academic_year: student.academic_year,
-                                      joining_date: student.joining_date,
-                                      parent_id: student.parent_id
-                                    });
-                                  }}
-                                  className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
-                                  title="Edit"
-                                >
-                                  <Edit size={12} />
-                                </button>
-                                {student.is_active ? (
+                          const totalStudentsPages = Math.ceil(filteredStudents.length / 10) || 1;
+                          const paginatedStudents = filteredStudents.slice((studentsPage - 1) * 10, studentsPage * 10);
+
+                          if (paginatedStudents.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={6} className="py-8 text-center text-muted-foreground text-xs italic">
+                                  No student profiles match your search.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return paginatedStudents.map((student) => (
+                            <tr
+                              key={student.id}
+                              onClick={(e) => {
+                                if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest("a")) return;
+                                setSelectedStudentForView(student);
+                              }}
+                              className={`border-b border-border/50 last:border-0 transition-colors cursor-pointer ${student.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}
+                            >
+                              <td className="py-3 font-semibold text-foreground font-mono">{student.admission_number}</td>
+                              <td className="py-3 text-foreground">{student.student_name}</td>
+                              <td className="py-3 text-muted-foreground">{student.class_name}</td>
+                              <td className="py-3 text-muted-foreground">{student.academic_year}</td>
+
+                              <td className="py-3">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${student.is_active
+                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                  }`}>
+                                  {student.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right">
+                                <div className="flex gap-2 justify-end">
                                   <button
-                                    onClick={() => handleDeactivateStudent(student.id)}
-                                    className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
-                                    title="Mark Inactive"
+                                    onClick={() => {
+                                      setEditingStudentId(student.id);
+                                      setStudentForm({
+                                        admission_number: student.admission_number,
+                                        student_name: student.student_name,
+                                        date_of_birth: student.date_of_birth,
+                                        class_name: student.class_name,
+                                        academic_year: student.academic_year,
+                                        joining_date: student.joining_date,
+                                        parent_id: student.parent_id
+                                      });
+                                    }}
+                                    className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
+                                    title="Edit"
                                   >
-                                    <ToggleRight size={12} />
+                                    <Edit size={12} />
                                   </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleActivateStudent(student.id)}
-                                    className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
-                                    title="Re-activate"
-                                  >
-                                    <ToggleLeft size={12} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  {student.is_active ? (
+                                    <button
+                                      onClick={() => handleDeactivateStudent(student.id)}
+                                      className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
+                                      title="Mark Inactive"
+                                    >
+                                      <ToggleRight size={12} />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleActivateStudent(student.id)}
+                                      className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
+                                      title="Re-activate"
+                                    >
+                                      <ToggleLeft size={12} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
+
+                    {(() => {
+                      const filteredStudents = students.filter((student) => {
+                        const matchesActive = !hideInactiveStudents || student.is_active;
+                        const matchesClass = classFilter === "All" || student.class_name === classFilter;
+                        const matchesYear = yearFilter === "All" || student.academic_year === yearFilter;
+                        const query = studentSearch.toLowerCase().trim();
+                        const matchesQuery = !query ||
+                          student.student_name.toLowerCase().includes(query) ||
+                          student.admission_number.toLowerCase().includes(query) ||
+                          (student.class_name || "").toLowerCase().includes(query);
+                        return matchesActive && matchesClass && matchesYear && matchesQuery;
+                      });
+                      const totalStudentsPages = Math.ceil(filteredStudents.length / 10) || 1;
+                      if (totalStudentsPages <= 1) return null;
+                      return (
+                        <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                          <span className="text-muted-foreground">
+                            Showing students {Math.min(filteredStudents.length, (studentsPage - 1) * 10 + 1)}-{Math.min(filteredStudents.length, studentsPage * 10)} of {filteredStudents.length}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setStudentsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={studentsPage === 1}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              onClick={() => setStudentsPage(prev => Math.min(prev + 1, totalStudentsPages))}
+                              disabled={studentsPage === totalStudentsPages}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
@@ -2239,7 +2307,10 @@ export default function AdminDashboard() {
                             type="text"
                             placeholder="Search parents..."
                             value={parentSearch}
-                            onChange={(e) => setParentSearch(e.target.value)}
+                            onChange={(e) => {
+                              setParentSearch(e.target.value);
+                              setParentsPage(1);
+                            }}
                             className="pl-8 pr-3 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none w-48 transition-all"
                           />
                         </div>
@@ -2248,7 +2319,10 @@ export default function AdminDashboard() {
                             id="hide-inactive-parents-checkbox"
                             type="checkbox"
                             checked={hideInactiveParents}
-                            onChange={(e) => setHideInactiveParents(e.target.checked)}
+                            onChange={(e) => {
+                              setHideInactiveParents(e.target.checked);
+                              setParentsPage(1);
+                            }}
                             className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
                           />
                           <label htmlFor="hide-inactive-parents-checkbox" className="text-xs font-semibold text-muted-foreground select-none cursor-pointer">
@@ -2270,98 +2344,154 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {profiles.filter(p => {
-                          const matchesRole = ((p as any).roles || []).includes("parent");
-                          const matchesActive = !hideInactiveParents || p.is_active;
-                          const query = parentSearch.toLowerCase().trim();
-                          const matchesQuery = !query ||
-                            p.full_name.toLowerCase().includes(query) ||
-                            p.email.toLowerCase().includes(query) ||
-                            p.phone.toLowerCase().includes(query) ||
-                            p.id.toLowerCase().includes(query);
-                          return matchesRole && matchesActive && matchesQuery;
-                        }).map((profile) => (
-                          <tr
-                            key={profile.id}
-                            onClick={(e) => {
-                              if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest("a")) return;
-                              setSelectedParentForView(profile);
-                            }}
-                            className={`border-b border-border/50 last:border-0 transition-colors cursor-pointer ${profile.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}
-                          >
-                            <td className="py-3 font-semibold text-foreground font-mono text-[10px]" title={profile.id}>
-                              {profile.id.substring(0, 7)}...
-                            </td>
-                            <td className="py-3 text-foreground">{profile.full_name}</td>
-                            <td className="py-3 text-muted-foreground">{profile.email}</td>
-                            <td className="py-3 text-muted-foreground">{profile.phone}</td>
-                            <td className="py-3">
-                              <div className="flex flex-col gap-1 items-start">
-                                {(profile as any).roles?.map((r: string) => (
-                                  <span key={r} className="px-1.5 py-0.5 text-[9px] font-bold bg-primary/10 text-primary rounded-full uppercase">
-                                    {r}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
-                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                                }`}>
-                                {profile.is_active ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              <div className="flex gap-2 justify-end">
-                                <button
-                                  onClick={() => {
-                                    setEditingParentId(profile.id);
-                                    setParentForm({
-                                      id: profile.id,
-                                      full_name: profile.full_name,
-                                      email: profile.email,
-                                      phone: profile.phone.replace("+91", ""),
-                                      roles: (profile as any).roles || ["parent"]
-                                    });
-                                  }}
-                                  className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
-                                  title="Edit"
-                                >
-                                  <Edit size={12} />
-                                </button>
-                                {profile.is_active && (
+                        {(() => {
+                          const filteredParents = profiles.filter(p => {
+                            const matchesRole = ((p as any).roles || []).includes("parent");
+                            const matchesActive = !hideInactiveParents || p.is_active;
+                            const query = parentSearch.toLowerCase().trim();
+                            const matchesQuery = !query ||
+                              p.full_name.toLowerCase().includes(query) ||
+                              p.email.toLowerCase().includes(query) ||
+                              p.phone.toLowerCase().includes(query) ||
+                              p.id.toLowerCase().includes(query);
+                            return matchesRole && matchesActive && matchesQuery;
+                          });
+
+                          const totalParentsPages = Math.ceil(filteredParents.length / 10) || 1;
+                          const paginatedParents = filteredParents.slice((parentsPage - 1) * 10, parentsPage * 10);
+
+                          if (paginatedParents.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs italic">
+                                  No parent profiles match your search.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return paginatedParents.map((profile) => (
+                            <tr
+                              key={profile.id}
+                              onClick={(e) => {
+                                if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest("a")) return;
+                                setSelectedParentForView(profile);
+                              }}
+                              className={`border-b border-border/50 last:border-0 transition-colors cursor-pointer ${profile.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}
+                            >
+                              <td className="py-3 font-semibold text-foreground font-mono text-[10px]" title={profile.id}>
+                                {profile.id.substring(0, 7)}...
+                              </td>
+                              <td className="py-3 text-foreground">{profile.full_name}</td>
+                              <td className="py-3 text-muted-foreground">{profile.email}</td>
+                              <td className="py-3 text-muted-foreground">{profile.phone}</td>
+                              <td className="py-3">
+                                <div className="flex flex-col gap-1 items-start">
+                                  {(profile as any).roles?.map((r: string) => (
+                                    <span key={r} className="px-1.5 py-0.5 text-[9px] font-bold bg-primary/10 text-primary rounded-full uppercase">
+                                      {r}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="py-3">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
+                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                  }`}>
+                                  {profile.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right">
+                                <div className="flex gap-2 justify-end">
                                   <button
-                                    onClick={() => handleResendSignupMail(profile.email)}
-                                    className="text-amber-500 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 p-1.5 rounded-full transition-all"
-                                    title="Resend Invite/Signup Link"
+                                    onClick={() => {
+                                      setEditingParentId(profile.id);
+                                      setParentForm({
+                                        id: profile.id,
+                                        full_name: profile.full_name,
+                                        email: profile.email,
+                                        phone: profile.phone.replace("+91", ""),
+                                        roles: (profile as any).roles || ["parent"]
+                                      });
+                                    }}
+                                    className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
+                                    title="Edit"
                                   >
-                                    <Mail size={12} />
+                                    <Edit size={12} />
                                   </button>
-                                )}
-                                {profile.is_active ? (
-                                  <button
-                                    onClick={() => handleDeactivateParent(profile.id)}
-                                    className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
-                                    title="Mark Inactive"
-                                  >
-                                    <ToggleRight size={12} />
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleActivateParent(profile.id)}
-                                    className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
-                                    title="Re-activate"
-                                  >
-                                    <ToggleLeft size={12} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  {profile.is_active && (
+                                    <button
+                                      onClick={() => handleResendSignupMail(profile.email)}
+                                      className="text-amber-500 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 p-1.5 rounded-full transition-all"
+                                      title="Resend Invite/Signup Link"
+                                    >
+                                      <Mail size={12} />
+                                    </button>
+                                  )}
+                                  {profile.is_active ? (
+                                    <button
+                                      onClick={() => handleDeactivateParent(profile.id)}
+                                      className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
+                                      title="Mark Inactive"
+                                    >
+                                      <ToggleRight size={12} />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleActivateParent(profile.id)}
+                                      className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
+                                      title="Re-activate"
+                                    >
+                                      <ToggleLeft size={12} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
+
+                    {(() => {
+                      const filteredParents = profiles.filter(p => {
+                        const matchesRole = ((p as any).roles || []).includes("parent");
+                        const matchesActive = !hideInactiveParents || p.is_active;
+                        const query = parentSearch.toLowerCase().trim();
+                        const matchesQuery = !query ||
+                          p.full_name.toLowerCase().includes(query) ||
+                          p.email.toLowerCase().includes(query) ||
+                          p.phone.toLowerCase().includes(query) ||
+                          p.id.toLowerCase().includes(query);
+                        return matchesRole && matchesActive && matchesQuery;
+                      });
+                      const totalParentsPages = Math.ceil(filteredParents.length / 10) || 1;
+                      if (totalParentsPages <= 1) return null;
+                      return (
+                        <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                          <span className="text-muted-foreground">
+                            Showing parents {Math.min(filteredParents.length, (parentsPage - 1) * 10 + 1)}-{Math.min(filteredParents.length, parentsPage * 10)} of {filteredParents.length}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setParentsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={parentsPage === 1}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              onClick={() => setParentsPage(prev => Math.min(prev + 1, totalParentsPages))}
+                              disabled={parentsPage === totalParentsPages}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
@@ -3484,7 +3614,10 @@ export default function AdminDashboard() {
                             type="text"
                             placeholder="Search subscriptions..."
                             value={accountSearch}
-                            onChange={(e) => setAccountSearch(e.target.value)}
+                            onChange={(e) => {
+                              setAccountSearch(e.target.value);
+                              setAccountsPage(1);
+                            }}
                             className="pl-8 pr-3 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none w-48 transition-all"
                           />
                         </div>
@@ -3493,7 +3626,10 @@ export default function AdminDashboard() {
                             id="hide-inactive-accounts-checkbox"
                             type="checkbox"
                             checked={hideInactiveAccounts}
-                            onChange={(e) => setHideInactiveAccounts(e.target.checked)}
+                            onChange={(e) => {
+                              setHideInactiveAccounts(e.target.checked);
+                              setAccountsPage(1);
+                            }}
                             className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
                           />
                           <label htmlFor="hide-inactive-accounts-checkbox" className="text-xs font-semibold text-muted-foreground select-none cursor-pointer">
@@ -3513,106 +3649,166 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {feeAccounts.filter((account) => {
-                          const studentObj = students.find(s => s.id === account.student_id);
-                          const matchesActive = !hideInactiveAccounts || (studentObj?.is_active !== false && account.is_active !== false);
+                        {(() => {
+                          const filteredAccounts = feeAccounts.filter((account) => {
+                            const studentObj = students.find(s => s.id === account.student_id);
+                            const matchesActive = !hideInactiveAccounts || (studentObj?.is_active !== false && account.is_active !== false);
 
-                          const query = accountSearch.toLowerCase().trim();
-                          const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "";
-                          const matchesQuery = !query ||
-                            (studentObj?.student_name || "").toLowerCase().includes(query) ||
-                            (studentObj?.admission_number || "").toLowerCase().includes(query) ||
-                            planName.toLowerCase().includes(query) ||
-                            account.payment_cycle.toLowerCase().includes(query) ||
-                            String(account.id).includes(query);
+                            const query = accountSearch.toLowerCase().trim();
+                            const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "";
+                            const matchesQuery = !query ||
+                              (studentObj?.student_name || "").toLowerCase().includes(query) ||
+                              (studentObj?.admission_number || "").toLowerCase().includes(query) ||
+                              planName.toLowerCase().includes(query) ||
+                              account.payment_cycle.toLowerCase().includes(query) ||
+                              String(account.id).includes(query);
 
-                          return matchesActive && matchesQuery;
-                        }).map((account) => {
-                          const studentObj = students.find(s => s.id === account.student_id);
-                          const studentName = studentObj ? `${studentObj.student_name} [${studentObj.admission_number}]` : "Unknown Student";
-                          const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "Unknown Plan";
-                          return (
-                            <tr key={account.id} className={`border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors ${editingAccountId === account.id ? "bg-primary/5 ring-1 ring-primary/20" : ""} ${!account.is_active ? "opacity-60 bg-muted/10" : ""}`}>
-                              <td className="py-3 text-foreground">
-                                <span className="font-medium">{studentName}</span>
-                                {account.discount_type && account.discount_value && parseFloat(account.discount_value as any) > 0 && (
-                                  <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20" title={`${account.notes || "Subscription discount applied"} (${account.discount_mode === "first_term" ? "Term 1 only" : "Divided"})`}>
-                                    🏷️ {parseFloat(account.discount_value as any).toLocaleString()}{account.discount_type === "percentage" ? "%" : " INR"} Off
-                                  </span>
-                                )}
-                                {account.charge_admission_fee && (
-                                  <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20" title="Includes one-time Admission Fee in Term 1">
-                                    ➕ Admission Fee
-                                  </span>
-                                )}
-                                {!account.is_active && (
-                                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/10">
-                                    Inactive
-                                  </span>
-                                )}
-                              </td>
-                              <td className="py-3 text-muted-foreground">{planName}</td>
-                              <td className="py-3 text-muted-foreground">{formatDate(account.effective_from)}</td>
-                              <td className="py-3 font-semibold capitalize text-primary">
-                                {account.payment_cycle === "quarterly" ? `Quarterly (${account.installments || 3} Inst)` : account.payment_cycle}
-                              </td>
-                              <td className="py-3 text-right">
-                                <div className="flex gap-1 justify-end">
-                                  <button
-                                    onClick={() => {
-                                      setEditingAccountId(account.id);
-                                      setAccountForm({
-                                        student_id: account.student_id,
-                                        fee_plan_id: account.fee_plan_id,
-                                        payment_cycle: account.payment_cycle,
-                                        effective_from: account.effective_from,
-                                        installments: account.installments || 3,
-                                        discount_type: (account.discount_type || "") as any,
-                                        discount_value: parseFloat(account.discount_value || "0") || 0,
-                                        discount_mode: (account.discount_mode || "divided") as any,
-                                        notes: account.notes || "",
-                                        charge_admission_fee: account.charge_admission_fee || false
-                                      });
-                                    }}
-                                    className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                                    title="Edit subscription"
-                                  >
-                                    <Pencil size={13} />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setCustomDueForm({
-                                        fee_account_id: account.id,
-                                        due_title: "",
-                                        amount: 0,
-                                        due_date: new Date().toISOString().split("T")[0],
-                                        remarks: ""
-                                      });
-                                      setIsCustomDueModalOpen(true);
-                                    }}
-                                    className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                                    title="Add custom charge/due"
-                                  >
-                                    <PlusCircle size={13} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleSubscriptionActive(account)}
-                                    className={`p-1.5 rounded-lg transition-colors ${
-                                      account.is_active
-                                        ? "hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500"
-                                        : "hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500"
-                                    }`}
-                                    title={account.is_active ? "Deactivate subscription" : "Activate subscription"}
-                                  >
-                                    {account.is_active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                            return matchesActive && matchesQuery;
+                          });
+
+                          const totalAccountsPages = Math.ceil(filteredAccounts.length / 10) || 1;
+                          const paginatedAccounts = filteredAccounts.slice((accountsPage - 1) * 10, accountsPage * 10);
+
+                          if (paginatedAccounts.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={5} className="py-8 text-center text-muted-foreground text-xs italic">
+                                  No active student fee accounts match your search.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return paginatedAccounts.map((account) => {
+                            const studentObj = students.find(s => s.id === account.student_id);
+                            const studentName = studentObj ? `${studentObj.student_name} [${studentObj.admission_number}]` : "Unknown Student";
+                            const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "Unknown Plan";
+                            return (
+                              <tr key={account.id} className={`border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors ${editingAccountId === account.id ? "bg-primary/5 ring-1 ring-primary/20" : ""} ${!account.is_active ? "opacity-60 bg-muted/10" : ""}`}>
+                                <td className="py-3 text-foreground">
+                                  <span className="font-medium">{studentName}</span>
+                                  {account.discount_type && account.discount_value && parseFloat(account.discount_value as any) > 0 && (
+                                    <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20" title={`${account.notes || "Subscription discount applied"} (${account.discount_mode === "first_term" ? "Term 1 only" : "Divided"})`}>
+                                      🏷️ {parseFloat(account.discount_value as any).toLocaleString()}{account.discount_type === "percentage" ? "%" : " INR"} Off
+                                    </span>
+                                  )}
+                                  {account.charge_admission_fee && (
+                                    <span className="ml-2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20" title="Includes one-time Admission Fee in Term 1">
+                                      ➕ Admission Fee
+                                    </span>
+                                  )}
+                                  {!account.is_active && (
+                                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/10">
+                                      Inactive
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 text-muted-foreground">{planName}</td>
+                                <td className="py-3 text-muted-foreground">{formatDate(account.effective_from)}</td>
+                                <td className="py-3 font-semibold capitalize text-primary">
+                                  {account.payment_cycle === "quarterly" ? `Quarterly (${account.installments || 3} Inst)` : account.payment_cycle}
+                                </td>
+                                <td className="py-3 text-right">
+                                  <div className="flex gap-1 justify-end">
+                                    <button
+                                      onClick={() => {
+                                        setEditingAccountId(account.id);
+                                        setAccountForm({
+                                          student_id: account.student_id,
+                                          fee_plan_id: account.fee_plan_id,
+                                          payment_cycle: account.payment_cycle,
+                                          effective_from: account.effective_from,
+                                          installments: account.installments || 3,
+                                          discount_type: (account.discount_type || "") as any,
+                                          discount_value: parseFloat(account.discount_value || "0") || 0,
+                                          discount_mode: (account.discount_mode || "divided") as any,
+                                          notes: account.notes || "",
+                                          charge_admission_fee: account.charge_admission_fee || false
+                                        });
+                                      }}
+                                      className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                                      title="Edit subscription"
+                                    >
+                                      <Pencil size={13} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setCustomDueForm({
+                                          fee_account_id: account.id,
+                                          due_title: "",
+                                          amount: 0,
+                                          due_date: new Date().toISOString().split("T")[0],
+                                          remarks: ""
+                                        });
+                                        setIsCustomDueModalOpen(true);
+                                      }}
+                                      className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                                      title="Add custom charge/due"
+                                    >
+                                      <PlusCircle size={13} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleToggleSubscriptionActive(account)}
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        account.is_active
+                                          ? "hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500"
+                                          : "hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500"
+                                      }`}
+                                      title={account.is_active ? "Deactivate subscription" : "Activate subscription"}
+                                    >
+                                      {account.is_active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
                       </tbody>
                     </table>
+
+                    {(() => {
+                      const filteredAccounts = feeAccounts.filter((account) => {
+                        const studentObj = students.find(s => s.id === account.student_id);
+                        const matchesActive = !hideInactiveAccounts || (studentObj?.is_active !== false && account.is_active !== false);
+
+                        const query = accountSearch.toLowerCase().trim();
+                        const planName = feePlans.find(p => p.id === account.fee_plan_id)?.class_name || "";
+                        const matchesQuery = !query ||
+                          (studentObj?.student_name || "").toLowerCase().includes(query) ||
+                          (studentObj?.admission_number || "").toLowerCase().includes(query) ||
+                          planName.toLowerCase().includes(query) ||
+                          account.payment_cycle.toLowerCase().includes(query) ||
+                          String(account.id).includes(query);
+
+                        return matchesActive && matchesQuery;
+                      });
+                      const totalAccountsPages = Math.ceil(filteredAccounts.length / 10) || 1;
+                      if (totalAccountsPages <= 1) return null;
+                      return (
+                        <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                          <span className="text-muted-foreground">
+                            Showing subscriptions {Math.min(filteredAccounts.length, (accountsPage - 1) * 10 + 1)}-{Math.min(filteredAccounts.length, accountsPage * 10)} of {filteredAccounts.length}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setAccountsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={accountsPage === 1}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              onClick={() => setAccountsPage(prev => Math.min(prev + 1, totalAccountsPages))}
+                              disabled={accountsPage === totalAccountsPages}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
