@@ -990,15 +990,13 @@ export default function ParentLogin() {
                     <motion.div
                       key={student.id}
                       {...fadeUp}
-                      className={`bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
-                        isGraduated ? "opacity-75 grayscale-[20%]" : ""
-                      }`}
+                      className={`bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${isGraduated ? "opacity-75 grayscale-[20%]" : ""
+                        }`}
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
                       <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold ${
-                          isGraduated ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-                        }`}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold ${isGraduated ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                          }`}>
                           {student.student_name[0]}
                         </div>
                         <div className="space-y-2 flex-1 min-w-0">
@@ -1220,10 +1218,10 @@ export default function ParentLogin() {
                           </div>
                         )}
                         {parseFloat(due.admission_fee || "0") > 0 && (
-                           <div className="flex justify-between text-muted-foreground">
-                             <span>Admission Fee:</span>
-                             <span className="font-medium text-foreground">₹{parseFloat(due.admission_fee).toLocaleString()}</span>
-                           </div>
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Admission Fee:</span>
+                            <span className="font-medium text-foreground">₹{parseFloat(due.admission_fee).toLocaleString()}</span>
+                          </div>
                         )}
                         {parseFloat(due.discount_applied) > 0 && (
                           <div className="flex justify-between text-emerald-600 font-medium">

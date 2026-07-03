@@ -297,29 +297,26 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return;
     setDataLoading(true);
     try {
-      const metrics = await api.getAdminDashboard();
+      const [metrics, allStudents, allProfiles, plans, rules, accounts, duesList, allPayments] =
+        await Promise.all([
+          api.getAdminDashboard(),
+          api.getAdminStudents(false),
+          api.getProfiles(false),
+          api.getFeePlans(),
+          api.getFeeRules(),
+          api.getFeeAccounts(),
+          api.getAdminFees(),
+          api.getAdminPayments(),
+        ]);
+
       setDashboardMetrics(metrics);
-
-      const allStudents = await api.getAdminStudents(false);
       setStudents(allStudents);
-
-      const allProfiles = await api.getProfiles(false);
       setProfiles(allProfiles);
-
-      const plans = await api.getFeePlans();
       setFeePlans(plans);
-
-      const rules = await api.getFeeRules();
       setFeeRules(rules);
-
-      const accounts = await api.getFeeAccounts();
       setFeeAccounts(accounts);
-
-      const duesList = await api.getAdminFees();
       setAllDues(duesList);
       setOpenDues(duesList.filter(d => d.status !== "paid"));
-
-      const allPayments = await api.getAdminPayments();
       setPayments(allPayments);
     } catch (err: any) {
       console.error("Failed to load admin logs", err);
