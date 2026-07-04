@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, Calendar, BookOpen, TreePine, Users, Star } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
+import { ArrowLeft, Calendar, BookOpen, TreePine, Users, Star, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { usePageMeta } from "@/hooks/use-page-meta";
+import { useAuth } from "@/context/AuthContext";
 
 const currentNewsletter = {
   title: "The Aspen Leaf",
@@ -43,7 +44,24 @@ const currentNewsletter = {
 };
 
 export default function Newsletter() {
+  const { isAuthenticated, isLoading, roles } = useAuth();
   usePageMeta("Newsletter – Aspen Montessori Hyderabad", "Stay updated with the latest news, events, and stories from Aspen Montessori Hyderabad.");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="animate-spin text-primary" size={32} />
+          <p className="text-sm text-muted-foreground animate-pulse">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || (!roles.includes("parent") && !roles.includes("admin"))) {
+    return <Navigate to="/parent" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

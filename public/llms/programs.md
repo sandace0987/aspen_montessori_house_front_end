@@ -12,7 +12,7 @@ Sensory exploration and early independence in a safe, nurturing environment. Foc
 
 ## Pre-Primary (3–5+ years)
 
-**Timing:** 9:00 AM – 12:30 PM
+**Timing:** Montessori-1 & Montessori-2 (Shift 1): 9:00 AM – 12:30 PM, (Shift 2): 11:30 AM – 3:00 PM | Montessori-3: 9:00 AM – 3:00 PM (Extended Hours)
 
 Building foundations through hands-on Montessori materials — from early exploration to school readiness. Children progress through Practical Life, Sensorial, Arithmetic, Language, and Cultural activities.
 

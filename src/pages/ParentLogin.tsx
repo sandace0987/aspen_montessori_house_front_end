@@ -465,7 +465,7 @@ export default function ParentLogin() {
               <div class="logo">ASPEN MONTESSORI HOUSE</div>
               <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Receipt of Professional Payments</div>
             </div>
-            <div class="badge">Success</div>
+            <div class="badge" style="background: ${payment.status === "success" ? "#dcfce7" : payment.status === "pending" ? "#fef3c7" : "#fee2e2"}; color: ${payment.status === "success" ? "#15803d" : payment.status === "pending" ? "#b45309" : "#b91c1c"};">${payment.status}</div>
           </div>
           <div class="grid">
             <div class="box">
@@ -477,7 +477,7 @@ export default function ParentLogin() {
             <div class="box">
               <strong style="display:block; margin-bottom:8px; color:#475569;">Transaction Details</strong>
               <strong>Receipt No:</strong> AMH-REC-${payment.id}<br/>
-              <strong>Payment ID:</strong> ${payment.gateway_payment_id || "Desk manual"}<br/>
+              <strong>Payment ID:</strong> ${payment.gateway_payment_id || (payment.payment_mode === "online_gateway" ? "Pending Gateway Checkout" : "Desk manual")}<br/>
               <strong>Date:</strong> ${new Date(payment.paid_at || payment.created_at).toLocaleString()}<br/>
               <strong>Payment Mode:</strong> ${payment.payment_mode.replace("_", " ")}
             </div>
@@ -1328,7 +1328,7 @@ export default function ParentLogin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((p) => {
+                  {payments.filter((p) => p.status !== "pending").map((p) => {
                     const studentName = students.find((s) => s.id === p.student_id)?.student_name || "Student";
                     const isSuccess = p.status === "success";
                     const baseAmt = parseFloat(p.amount_paid);

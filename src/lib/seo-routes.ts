@@ -23,7 +23,7 @@ export const seoRoutes: SeoRoute[] = [
       <h2>Our Programs</h2>
       <ul>
         <li><strong>Toddlers</strong> – Ages 1.5–2.5 years (9:00 AM – 12:30 PM)</li>
-        <li><strong>Pre-Primary</strong> – Ages 3–5+ years (9:00 AM – 12:30 PM)</li>
+        <li><strong>Pre-Primary</strong> – Ages 3–5+ years (M1 &amp; M2 Shift 1: 9:00 AM – 12:30 PM, Shift 2: 11:30 AM – 3:00 PM | M3: 9:00 AM – 3:00 PM)</li>
         <li><strong>Daycare</strong> – Ages 1.5–6 years (9:00 AM – 5:30 PM)</li>
       </ul>
       <nav>
@@ -66,7 +66,7 @@ export const seoRoutes: SeoRoute[] = [
     criticalHtml: `<h1>Our Programs</h1>
       <p>Each program follows authentic Montessori pedagogy tailored to your child's developmental stage.</p>
       <h2>Toddlers (1.5–2.5 years) — 9:00 AM – 12:30 PM</h2><p>Sensory exploration and early independence in a safe, nurturing environment.</p>
-      <h2>Pre-Primary (3–5+ years) — 9:00 AM – 12:30 PM</h2><p>Building foundations through hands-on Montessori materials — from early exploration to school readiness in a carefully prepared mixed-age environment.</p>
+      <h2>Pre-Primary (3–5+ years)</h2><p>M1 &amp; M2 Shift 1: 9:00 AM – 12:30 PM, Shift 2: 11:30 AM – 3:00 PM | M3: 9:00 AM – 3:00 PM. Building foundations through hands-on Montessori materials — from early exploration to school readiness in a carefully prepared mixed-age environment.</p>
       <h2>Daycare (1.5–6 years) — 9:00 AM – 5:30 PM</h2><p>Extended care blending Montessori activities with rest and play.</p>
       <nav><a href="/">Home</a> · <a href="/about">About Us</a> · <a href="/gallery">Gallery</a></nav>`,
   },

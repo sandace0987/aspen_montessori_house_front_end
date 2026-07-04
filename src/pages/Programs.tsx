@@ -26,7 +26,7 @@ const programs = [
   {
     title: "Pre-Primary",
     age: "3 – 5+ years",
-    timing: "9:00 AM – 12:30 PM",
+    timing: "M1 & M2 (Shift 1): 9:00 AM – 12:30 PM | (Shift 2): 11:30 AM – 3:00 PM\nM3: 9:00 AM – 3:00 PM",
     img: prePrimary,
     tagline: "Building foundations through hands-on Montessori learning",
     description: "Our Pre-Primary program immerses children in authentic Montessori materials and activities across all developmental stages. From practical life exercises and sensorial exploration to advanced reading, writing, mathematics, and cultural studies — children build concentration, independence, critical thinking, and a deep love for learning in a carefully prepared mixed-age environment.",
@@ -91,8 +91,8 @@ export default function Programs() {
                 <div className={`p-8 md:p-10 flex flex-col justify-center ${i % 2 === 1 ? "lg:order-first" : ""}`}>
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <span className="text-xs font-bold tracking-widest uppercase text-primary">{p.age}</span>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock size={12} /> {p.timing}
+                    <span className="flex items-start gap-1 text-xs text-muted-foreground" style={{ whiteSpace: "pre-line" }}>
+                      <Clock size={12} className="mt-0.5" /> {p.timing}
                     </span>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-semibold mb-2">{p.title}</h2>

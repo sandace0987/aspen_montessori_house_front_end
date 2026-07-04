@@ -12,7 +12,7 @@ Aspen Montessori House is a leading Montessori preschool and daycare in Hyderaba
 | Program | Age | Timing |
 |---------|-----|--------|
 | Toddlers | 1.5–2.5 years | 9:00 AM – 12:30 PM |
-| Pre-Primary | 3–5+ years | 9:00 AM – 12:30 PM |
+| Pre-Primary | 3–5+ years | M1 & M2 Shift 1: 9:00 AM – 12:30 PM, Shift 2: 11:30 AM – 3:00 PM \| M3: 9:00 AM – 3:00 PM |
 | Daycare | 1.5–6 years | 9:00 AM – 5:30 PM |
 
 ## Why Aspen Montessori?

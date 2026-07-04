@@ -44,7 +44,8 @@ import {
   Mail,
   Tag,
   PlusCircle,
-  ArrowRightLeft
+  ArrowRightLeft,
+  FileText
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/context/AuthContext";
@@ -167,7 +168,8 @@ export default function AdminDashboard() {
     class_name: "Montessori-1",
     academic_year: "2026-2027",
     joining_date: new Date().toISOString().split("T")[0],
-    parent_id: ""
+    parent_id: "",
+    remarks: ""
   });
 
   // Parent form
@@ -213,6 +215,16 @@ export default function AdminDashboard() {
   const [studentSelectOpen, setStudentSelectOpen] = useState(false);
   const [subscriptionSelectSearch, setSubscriptionSelectSearch] = useState("");
   const [subscriptionSelectOpen, setSubscriptionSelectOpen] = useState(false);
+
+  // Search queries & pagination states
+  const [parentSelectSearch, setParentSelectSearch] = useState("");
+  const [parentSelectOpen, setParentSelectOpen] = useState(false);
+  const [paymentStudentSelectSearch, setPaymentStudentSelectSearch] = useState("");
+  const [paymentStudentSelectOpen, setPaymentStudentSelectOpen] = useState(false);
+  const [studentLedgerPage, setStudentLedgerPage] = useState(1);
+  const [transitionsPage, setTransitionsPage] = useState(1);
+  const [adminsPage, setAdminsPage] = useState(1);
+  const [rulesPage, setRulesPage] = useState(1);
 
   // Student Fee Account subscription form
   const [accountForm, setAccountForm] = useState({
@@ -328,6 +340,10 @@ export default function AdminDashboard() {
       setDataLoading(false);
     }
   };
+
+  useEffect(() => {
+    setStudentLedgerPage(1);
+  }, [selectedStudentForView]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -550,7 +566,8 @@ export default function AdminDashboard() {
           class_name: studentForm.class_name,
           academic_year: studentForm.academic_year,
           joining_date: studentForm.joining_date,
-          parent_id: studentForm.parent_id
+          parent_id: studentForm.parent_id,
+          remarks: studentForm.remarks ? studentForm.remarks.trim() : null
         });
         toast.success("Student profile updated successfully!");
         setEditingStudentId(null);
@@ -563,7 +580,8 @@ export default function AdminDashboard() {
           academic_year: studentForm.academic_year,
           joining_date: studentForm.joining_date,
           parent_id: studentForm.parent_id,
-          is_active: true
+          is_active: true,
+          remarks: studentForm.remarks ? studentForm.remarks.trim() : null
         });
         toast.success("Student onboarded successfully!");
       }
@@ -576,8 +594,10 @@ export default function AdminDashboard() {
         class_name: "Montessori-1",
         academic_year: "2026-2027",
         joining_date: new Date().toISOString().split("T")[0],
-        parent_id: ""
+        parent_id: "",
+        remarks: ""
       });
+      setParentSelectSearch("");
     } catch (err: any) {
       toast.error(err.message || "Failed to onboard student profile.");
     }
@@ -1027,6 +1047,7 @@ export default function AdminDashboard() {
       fetchAllData();
       // Reset
       setPaymentSelectedStudentId(0);
+      setPaymentStudentSelectSearch("");
       setPaymentForm({
         fee_due_id: 0,
         amount_paid: 0,
@@ -1083,7 +1104,7 @@ export default function AdminDashboard() {
               <div class="logo">ASPEN MONTESSORI HOUSE</div>
               <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Receipt of Professional Payments</div>
             </div>
-            <div class="badge">Success</div>
+            <div class="badge" style="background: ${payment.status === "success" ? "#dcfce7" : payment.status === "pending" ? "#fef3c7" : "#fee2e2"}; color: ${payment.status === "success" ? "#15803d" : payment.status === "pending" ? "#b45309" : "#b91c1c"};">${payment.status}</div>
           </div>
           <div class="grid">
             <div class="box">
@@ -1095,7 +1116,7 @@ export default function AdminDashboard() {
             <div class="box">
               <strong style="display:block; margin-bottom:8px; color:#475569;">Transaction Details</strong>
               <strong>Receipt No:</strong> AMH-REC-${payment.id}<br/>
-              <strong>Payment ID:</strong> ${payment.gateway_payment_id || "Desk manual"}<br/>
+              <strong>Payment ID:</strong> ${payment.gateway_payment_id || (payment.payment_mode === "online_gateway" ? "Pending Gateway Checkout" : "Desk manual")}<br/>
               <strong>Date:</strong> ${new Date(payment.paid_at || payment.created_at).toLocaleString()}<br/>
               <strong>Payment Mode:</strong> ${payment.payment_mode.replace("_", " ")}
             </div>
@@ -1914,20 +1935,85 @@ export default function AdminDashboard() {
                             placeholder="2026-2027"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Parent profile (UUID)</label>
-                          <select
-                            required
-                            value={studentForm.parent_id}
-                            onChange={(e) => setStudentForm({ ...studentForm, parent_id: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                          >
-                            <option value="">Select Parent Profile</option>
-                            {profiles.filter(p => ((p as any).roles || []).includes("parent")).map(p => (
-                              <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>
-                            ))}
-                          </select>
+                        <div className="relative">
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Parent Profile</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="🔍 Search parent name or email..."
+                              value={parentSelectSearch}
+                              onFocus={() => setParentSelectOpen(true)}
+                              onChange={(e) => {
+                                setParentSelectSearch(e.target.value);
+                                setParentSelectOpen(true);
+                                if (!e.target.value) {
+                                  setStudentForm(prev => ({ ...prev, parent_id: "" }));
+                                }
+                              }}
+                              onBlur={() => setTimeout(() => setParentSelectOpen(false), 150)}
+                              className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none pr-7"
+                            />
+                            {studentForm.parent_id && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setParentSelectSearch("");
+                                  setStudentForm(prev => ({ ...prev, parent_id: "" }));
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
+                          </div>
+                          {parentSelectOpen && (
+                            <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                              {profiles
+                                .filter(p => ((p as any).roles || []).includes("parent"))
+                                .filter(p => {
+                                  const q = parentSelectSearch.toLowerCase().trim();
+                                  if (!q) return true;
+                                  return p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+                                }).length === 0 ? (
+                                  <div className="px-3 py-2 text-xs text-muted-foreground">No parents found</div>
+                                ) : (
+                                  profiles
+                                    .filter(p => ((p as any).roles || []).includes("parent"))
+                                    .filter(p => {
+                                      const q = parentSelectSearch.toLowerCase().trim();
+                                      if (!q) return true;
+                                      return p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+                                    })
+                                    .map(p => (
+                                      <button
+                                        key={p.id}
+                                        type="button"
+                                        onMouseDown={() => {
+                                          setStudentForm(prev => ({ ...prev, parent_id: p.id }));
+                                          setParentSelectSearch(`${p.full_name} (${p.email})`);
+                                          setParentSelectOpen(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors flex flex-col ${studentForm.parent_id === p.id ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                      >
+                                        <span className="font-medium">{p.full_name}</span>
+                                        <span className="text-[10px] text-muted-foreground">{p.email}</span>
+                                      </button>
+                                    ))
+                                )}
+                            </div>
+                          )}
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Student Remarks</label>
+                        <textarea
+                          rows={2}
+                          value={studentForm.remarks}
+                          onChange={(e) => setStudentForm({ ...studentForm, remarks: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none resize-none"
+                          placeholder="Special instructions, dietary restrictions, general notes..."
+                        />
                       </div>
 
                       <div className="flex gap-2">
@@ -1949,8 +2035,10 @@ export default function AdminDashboard() {
                                 class_name: "Montessori-1",
                                 academic_year: "2026-2027",
                                 joining_date: new Date().toISOString().split("T")[0],
-                                parent_id: ""
+                                parent_id: "",
+                                remarks: ""
                               });
+                              setParentSelectSearch("");
                             }}
                             className="px-4 py-2.5 rounded-full bg-muted text-muted-foreground font-semibold text-xs hover:bg-muted/80 transition-all"
                           >
@@ -2097,8 +2185,11 @@ export default function AdminDashboard() {
                                         class_name: student.class_name,
                                         academic_year: student.academic_year,
                                         joining_date: student.joining_date,
-                                        parent_id: student.parent_id
+                                        parent_id: student.parent_id,
+                                        remarks: (student as any).remarks || ""
                                       });
+                                      const parentObj = profiles.find(p => p.id === student.parent_id);
+                                      setParentSelectSearch(parentObj ? `${parentObj.full_name} (${parentObj.email})` : "");
                                     }}
                                     className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
                                     title="Edit"
@@ -2234,40 +2325,6 @@ export default function AdminDashboard() {
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Backend Role assignment</label>
-                        <div className="flex gap-4 pt-1">
-                          <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <input
-                              type="checkbox"
-                              checked={parentForm.roles.includes("parent")}
-                              onChange={(e) => {
-                                const list = [...parentForm.roles];
-                                if (e.target.checked) list.push("parent");
-                                else list.splice(list.indexOf("parent"), 1);
-                                setParentForm({ ...parentForm, roles: list });
-                              }}
-                              className="rounded bg-muted border-0"
-                            />
-                            Parent
-                          </label>
-                          <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <input
-                              type="checkbox"
-                              checked={parentForm.roles.includes("admin")}
-                              onChange={(e) => {
-                                const list = [...parentForm.roles];
-                                if (e.target.checked) list.push("admin");
-                                else list.splice(list.indexOf("admin"), 1);
-                                setParentForm({ ...parentForm, roles: list });
-                              }}
-                              className="rounded bg-muted border-0"
-                            />
-                            Admin
-                          </label>
-                        </div>
-                      </div>
-
                       <div className="flex gap-2">
                         <button
                           type="submit"
@@ -2360,8 +2417,8 @@ export default function AdminDashboard() {
                             return matchesRole && matchesActive && matchesQuery;
                           });
 
-                          const totalParentsPages = Math.ceil(filteredParents.length / 10) || 1;
-                          const paginatedParents = filteredParents.slice((parentsPage - 1) * 10, parentsPage * 10);
+                          const totalParentsPages = Math.ceil(filteredParents.length / 5) || 1;
+                          const paginatedParents = filteredParents.slice((parentsPage - 1) * 5, parentsPage * 5);
 
                           if (paginatedParents.length === 0) {
                             return (
@@ -2469,12 +2526,12 @@ export default function AdminDashboard() {
                           p.id.toLowerCase().includes(query);
                         return matchesRole && matchesActive && matchesQuery;
                       });
-                      const totalParentsPages = Math.ceil(filteredParents.length / 10) || 1;
+                      const totalParentsPages = Math.ceil(filteredParents.length / 5) || 1;
                       if (totalParentsPages <= 1) return null;
                       return (
                         <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
                           <span className="text-muted-foreground">
-                            Showing parents {Math.min(filteredParents.length, (parentsPage - 1) * 10 + 1)}-{Math.min(filteredParents.length, parentsPage * 10)} of {filteredParents.length}
+                            Showing parents {Math.min(filteredParents.length, (parentsPage - 1) * 5 + 1)}-{Math.min(filteredParents.length, parentsPage * 5)} of {filteredParents.length}
                           </span>
                           <div className="flex gap-2">
                             <button
@@ -2643,7 +2700,10 @@ export default function AdminDashboard() {
                             type="text"
                             placeholder="Search admins..."
                             value={adminSearch}
-                            onChange={(e) => setAdminSearch(e.target.value)}
+                            onChange={(e) => {
+                              setAdminSearch(e.target.value);
+                              setAdminsPage(1);
+                            }}
                             className="pl-8 pr-3 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none w-48 transition-all"
                           />
                         </div>
@@ -2652,7 +2712,10 @@ export default function AdminDashboard() {
                             id="hide-inactive-admins-checkbox"
                             type="checkbox"
                             checked={hideInactiveAdmins}
-                            onChange={(e) => setHideInactiveAdmins(e.target.checked)}
+                            onChange={(e) => {
+                              setHideInactiveAdmins(e.target.checked);
+                              setAdminsPage(1);
+                            }}
                             className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
                           />
                           <label htmlFor="hide-inactive-admins-checkbox" className="text-xs font-semibold text-muted-foreground select-none cursor-pointer">
@@ -2674,91 +2737,149 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {profiles.filter(p => {
-                          const matchesRole = ((p as any).roles || []).includes("admin");
-                          const matchesActive = !hideInactiveAdmins || p.is_active;
-                          const query = adminSearch.toLowerCase().trim();
-                          const matchesQuery = !query ||
-                            p.full_name.toLowerCase().includes(query) ||
-                            p.email.toLowerCase().includes(query) ||
-                            p.phone.toLowerCase().includes(query) ||
-                            p.id.toLowerCase().includes(query);
-                          return matchesRole && matchesActive && matchesQuery;
-                        }).map((profile) => (
-                          <tr key={profile.id} className={`border-b border-border/50 last:border-0 transition-colors ${profile.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}>
-                            <td className="py-3 font-semibold text-foreground font-mono text-[10px]" title={profile.id}>
-                              {profile.id.substring(0, 7)}...
-                            </td>
-                            <td className="py-3 text-foreground">{profile.full_name}</td>
-                            <td className="py-3 text-muted-foreground">{profile.email}</td>
-                            <td className="py-3 text-muted-foreground">{profile.phone}</td>
-                            <td className="py-3">
-                              <div className="flex flex-col gap-1 items-start">
-                                {(profile as any).roles?.map((r: string) => (
-                                  <span key={r} className="px-1.5 py-0.5 text-[9px] font-bold bg-primary/10 text-primary rounded-full uppercase">
-                                    {r}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="py-3">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
-                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                                }`}>
-                                {profile.is_active ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              <div className="flex gap-2 justify-end">
-                                <button
-                                  onClick={() => {
-                                    setEditingAdminId(profile.id);
-                                    setAdminForm({
-                                      id: profile.id,
-                                      full_name: profile.full_name,
-                                      email: profile.email,
-                                      phone: profile.phone.replace("+91", ""),
-                                      roles: (profile as any).roles || ["admin"]
-                                    });
-                                  }}
-                                  className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
-                                  title="Edit"
-                                >
-                                  <Edit size={12} />
-                                </button>
-                                {profile.is_active && (
+                        {(() => {
+                          const filteredAdmins = profiles.filter(p => {
+                            const matchesRole = ((p as any).roles || []).includes("admin");
+                            const matchesActive = !hideInactiveAdmins || p.is_active;
+                            const query = adminSearch.toLowerCase().trim();
+                            const matchesQuery = !query ||
+                              p.full_name.toLowerCase().includes(query) ||
+                              p.email.toLowerCase().includes(query) ||
+                              p.phone.toLowerCase().includes(query) ||
+                              p.id.toLowerCase().includes(query);
+                            return matchesRole && matchesActive && matchesQuery;
+                          });
+
+                          const totalAdminsPages = Math.ceil(filteredAdmins.length / 5) || 1;
+                          const paginatedAdmins = filteredAdmins.slice((adminsPage - 1) * 5, adminsPage * 5);
+
+                          if (paginatedAdmins.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={7} className="py-8 text-center text-muted-foreground text-xs italic">
+                                  No admin profiles match your search.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return paginatedAdmins.map((profile) => (
+                            <tr key={profile.id} className={`border-b border-border/50 last:border-0 transition-colors ${profile.is_active ? "hover:bg-muted/10" : "opacity-50 hover:bg-muted/5"}`}>
+                              <td className="py-3 font-semibold text-foreground font-mono text-[10px]" title={profile.id}>
+                                {profile.id.substring(0, 7)}...
+                              </td>
+                              <td className="py-3 text-foreground">{profile.full_name}</td>
+                              <td className="py-3 text-muted-foreground">{profile.email}</td>
+                              <td className="py-3 text-muted-foreground">{profile.phone}</td>
+                              <td className="py-3">
+                                <div className="flex flex-col gap-1 items-start">
+                                  {(profile as any).roles?.map((r: string) => (
+                                    <span key={r} className="px-1.5 py-0.5 text-[9px] font-bold bg-primary/10 text-primary rounded-full uppercase">
+                                      {r}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="py-3">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${profile.is_active
+                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                  }`}>
+                                  {profile.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right">
+                                <div className="flex gap-2 justify-end">
                                   <button
-                                    onClick={() => handleResendSignupMail(profile.email)}
-                                    className="text-amber-500 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 p-1.5 rounded-full transition-all"
-                                    title="Resend Invite/Signup Link"
+                                    onClick={() => {
+                                      setEditingAdminId(profile.id);
+                                      setAdminForm({
+                                        id: profile.id,
+                                        full_name: profile.full_name,
+                                        email: profile.email,
+                                        phone: profile.phone.replace("+91", ""),
+                                        roles: (profile as any).roles || ["admin"]
+                                      });
+                                    }}
+                                    className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary/20 p-1.5 rounded-full transition-all"
+                                    title="Edit"
                                   >
-                                    <Mail size={12} />
+                                    <Edit size={12} />
                                   </button>
-                                )}
-                                {profile.is_active ? (
-                                  <button
-                                    onClick={() => handleDeactivateAdmin(profile.id)}
-                                    className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
-                                    title="Mark Inactive"
-                                  >
-                                    <ToggleRight size={12} />
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleActivateAdmin(profile.id)}
-                                    className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
-                                    title="Re-activate"
-                                  >
-                                    <ToggleLeft size={12} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  {profile.is_active && (
+                                    <button
+                                      onClick={() => handleResendSignupMail(profile.email)}
+                                      className="text-amber-500 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 p-1.5 rounded-full transition-all"
+                                      title="Resend Invite/Signup Link"
+                                    >
+                                      <Mail size={12} />
+                                    </button>
+                                  )}
+                                  {profile.is_active ? (
+                                    <button
+                                      onClick={() => handleDeactivateAdmin(profile.id)}
+                                      className="text-rose-500 hover:text-rose-700 bg-rose-500/10 hover:bg-rose-500/20 p-1.5 rounded-full transition-all"
+                                      title="Mark Inactive"
+                                    >
+                                      <ToggleRight size={12} />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleActivateAdmin(profile.id)}
+                                      className="text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20 p-1.5 rounded-full transition-all"
+                                      title="Re-activate"
+                                    >
+                                      <ToggleLeft size={12} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
+
+                    {(() => {
+                      const filteredAdmins = profiles.filter(p => {
+                        const matchesRole = ((p as any).roles || []).includes("admin");
+                        const matchesActive = !hideInactiveAdmins || p.is_active;
+                        const query = adminSearch.toLowerCase().trim();
+                        const matchesQuery = !query ||
+                          p.full_name.toLowerCase().includes(query) ||
+                          p.email.toLowerCase().includes(query) ||
+                          p.phone.toLowerCase().includes(query) ||
+                          p.id.toLowerCase().includes(query);
+                        return matchesRole && matchesActive && matchesQuery;
+                      });
+                      const totalAdminsPages = Math.ceil(filteredAdmins.length / 5) || 1;
+                      if (totalAdminsPages <= 1) return null;
+                      return (
+                        <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs">
+                          <span className="text-muted-foreground">
+                            Showing admins {Math.min(filteredAdmins.length, (adminsPage - 1) * 5 + 1)}-{Math.min(filteredAdmins.length, adminsPage * 5)} of {filteredAdmins.length}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setAdminsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={adminsPage === 1}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAdminsPage(prev => Math.min(prev + 1, totalAdminsPages))}
+                              disabled={adminsPage === totalAdminsPages}
+                              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
@@ -2883,10 +3004,9 @@ export default function AdminDashboard() {
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Plan Description</label>
                         <textarea
                           rows={2}
-                          disabled={!!editingPlanId}
                           value={planForm.description}
                           onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none resize-none"
                           placeholder="Standard Montessori plan details..."
                         />
                       </div>
@@ -3169,7 +3289,10 @@ export default function AdminDashboard() {
                               type="text"
                               placeholder="Search rules..."
                               value={ruleSearch}
-                              onChange={(e) => setRuleSearch(e.target.value)}
+                              onChange={(e) => {
+                                setRuleSearch(e.target.value);
+                                setRulesPage(1);
+                              }}
                               className="pl-8 pr-3 py-1.5 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none w-48 transition-all"
                             />
                           </div>
@@ -3178,7 +3301,10 @@ export default function AdminDashboard() {
                               id="hide-inactive-rules-checkbox"
                               type="checkbox"
                               checked={hideInactiveRules}
-                              onChange={(e) => setHideInactiveRules(e.target.checked)}
+                              onChange={(e) => {
+                                setHideInactiveRules(e.target.checked);
+                                setRulesPage(1);
+                              }}
                               className="rounded border-border bg-muted text-primary focus:ring-ring h-4 w-4 transition-all cursor-pointer"
                             />
                             <label htmlFor="hide-inactive-rules-checkbox" className="text-xs font-semibold text-muted-foreground select-none cursor-pointer">
@@ -3199,72 +3325,103 @@ export default function AdminDashboard() {
                           return matchesActive && matchesQuery;
                         });
 
+                        const totalRulesPages = Math.ceil(filteredRules.length / 5) || 1;
+                        const paginatedRules = filteredRules.slice((rulesPage - 1) * 5, rulesPage * 5);
+
                         return filteredRules.length === 0 ? (
                           <div className="py-12 text-center border border-dashed border-border rounded-xl">
                             <Tag className="mx-auto text-muted-foreground mb-2 opacity-60" size={24} />
                             <p className="text-xs text-muted-foreground">No custom fee rules match your criteria.</p>
                           </div>
                         ) : (
-                          <table className="w-full text-xs md:text-sm">
-                            <thead>
-                              <tr className="border-b border-border text-muted-foreground text-left text-[10px] font-bold uppercase tracking-wider">
-                                <th className="pb-3">Rule Name</th>
-                                <th className="pb-3">Type</th>
-                                <th className="pb-3">Value</th>
-                                <th className="pb-3">Applies To</th>
-                                <th className="pb-3">Status</th>
-                                <th className="pb-3 text-right pr-3">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredRules.map((rule) => (
-                                <tr key={rule.id} className="border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors">
-                                  <td className="py-3 font-semibold text-foreground font-mono">{rule.rule_name}</td>
-                                  <td className="py-3 capitalize text-muted-foreground">{rule.discount_type}</td>
-                                  <td className="py-3 text-foreground font-medium">
-                                    {rule.discount_type === "fixed" ? `₹${parseFloat(rule.discount_value).toLocaleString()}` : `${rule.discount_value}%`}
-                                  </td>
-                                  <td className="py-3 capitalize font-semibold text-primary">{rule.applies_to || "all"}</td>
-                                  <td className="py-3">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${rule.is_active ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
-                                      {rule.is_active ? "Active" : "Inactive"}
-                                    </span>
-                                  </td>
-                                  <td className="py-3 text-right pr-3">
-                                    <div className="flex items-center justify-end gap-1.5">
-                                      <button
-                                        onClick={() => {
-                                          setEditingRuleId(rule.id);
-                                          setRuleForm({
-                                            rule_name: rule.rule_name,
-                                            discount_type: rule.discount_type,
-                                            discount_value: parseFloat(rule.discount_value),
-                                            applies_to: (rule.applies_to || "yearly") as any,
-                                            is_active: rule.is_active
-                                          });
-                                        }}
-                                        className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary p-1.5 rounded-full transition-all"
-                                        title="Edit Rule"
-                                      >
-                                        <Pencil size={12} />
-                                      </button>
-                                      <button
-                                        onClick={() => handleToggleRuleActive(rule.id)}
-                                        className={`p-1.5 rounded-full transition-all ${
-                                          rule.is_active
-                                            ? "text-amber-600 hover:text-amber-800 bg-amber-500/10 hover:bg-amber-500/20"
-                                            : "text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
-                                        }`}
-                                        title={rule.is_active ? "Inactivate Rule" : "Activate Rule"}
-                                      >
-                                        {rule.is_active ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
-                                      </button>
-                                    </div>
-                                  </td>
+                          <div className="space-y-4">
+                            <table className="w-full text-xs md:text-sm">
+                              <thead>
+                                <tr className="border-b border-border text-muted-foreground text-left text-[10px] font-bold uppercase tracking-wider">
+                                  <th className="pb-3">Rule Name</th>
+                                  <th className="pb-3">Type</th>
+                                  <th className="pb-3">Value</th>
+                                  <th className="pb-3">Applies To</th>
+                                  <th className="pb-3">Status</th>
+                                  <th className="pb-3 text-right pr-3">Actions</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {paginatedRules.map((rule) => (
+                                  <tr key={rule.id} className="border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors">
+                                    <td className="py-3 font-semibold text-foreground font-mono">{rule.rule_name}</td>
+                                    <td className="py-3 capitalize text-muted-foreground">{rule.discount_type}</td>
+                                    <td className="py-3 text-foreground font-medium">
+                                      {rule.discount_type === "fixed" ? `₹${parseFloat(rule.discount_value).toLocaleString()}` : `${rule.discount_value}%`}
+                                    </td>
+                                    <td className="py-3 capitalize font-semibold text-primary">{rule.applies_to || "all"}</td>
+                                    <td className="py-3">
+                                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${rule.is_active ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                                        {rule.is_active ? "Active" : "Inactive"}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 text-right pr-3">
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <button
+                                          onClick={() => {
+                                            setEditingRuleId(rule.id);
+                                            setRuleForm({
+                                              rule_name: rule.rule_name,
+                                              discount_type: rule.discount_type,
+                                              discount_value: parseFloat(rule.discount_value),
+                                              applies_to: (rule.applies_to || "yearly") as any,
+                                              is_active: rule.is_active
+                                            });
+                                          }}
+                                          className="text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary p-1.5 rounded-full transition-all"
+                                          title="Edit Rule"
+                                        >
+                                          <Pencil size={12} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleToggleRuleActive(rule.id)}
+                                          className={`p-1.5 rounded-full transition-all ${
+                                            rule.is_active
+                                              ? "text-amber-600 hover:text-amber-800 bg-amber-500/10 hover:bg-amber-500/20"
+                                              : "text-emerald-600 hover:text-emerald-800 bg-emerald-500/10 hover:bg-emerald-500/20"
+                                          }`}
+                                          title={rule.is_active ? "Inactivate Rule" : "Activate Rule"}
+                                        >
+                                          {rule.is_active ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+
+                            {totalRulesPages > 1 && (
+                              <div className="flex items-center justify-between border-t border-border pt-4 text-xs font-sans">
+                                <span className="text-muted-foreground">
+                                  Showing rules {Math.min(filteredRules.length, (rulesPage - 1) * 5 + 1)}-{Math.min(filteredRules.length, rulesPage * 5)} of {filteredRules.length}
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setRulesPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={rulesPage === 1}
+                                    className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                                  >
+                                    Previous
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setRulesPage(prev => Math.min(prev + 1, totalRulesPages))}
+                                    disabled={rulesPage === totalRulesPages}
+                                    className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                                  >
+                                    Next
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         );
                       })()}
                     </div>
@@ -4252,28 +4409,76 @@ export default function AdminDashboard() {
                       <Save size={16} className="text-primary" /> Record manual payment receipt
                     </h3>
                     <form onSubmit={handleRecordManualPayment} className="space-y-3">
-                      <div>
+                      <div className="relative">
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Select Student</label>
-                        <select
-                          required
-                          value={paymentSelectedStudentId}
-                          onChange={(e) => {
-                            const studentId = Number(e.target.value);
-                            setPaymentSelectedStudentId(studentId);
-                            setPaymentForm({ ...paymentForm, fee_due_id: 0, amount_paid: 0 });
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
-                        >
-                          <option value="0">Select Student</option>
-                          {students
-                            .filter(s => s.is_active !== false && openDues.some(d => d.student_id === s.id))
-                            .map(s => (
-                              <option key={s.id} value={s.id}>
-                                {s.student_name} [{s.admission_number}]
-                              </option>
-                            ))
-                          }
-                        </select>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="🔍 Search student by name or adm no..."
+                            value={paymentStudentSelectSearch}
+                            onFocus={() => setPaymentStudentSelectOpen(true)}
+                            onChange={(e) => {
+                              setPaymentStudentSelectSearch(e.target.value);
+                              setPaymentStudentSelectOpen(true);
+                              if (!e.target.value) {
+                                setPaymentSelectedStudentId(0);
+                                setPaymentForm({ ...paymentForm, fee_due_id: 0, amount_paid: 0 });
+                              }
+                            }}
+                            onBlur={() => setTimeout(() => setPaymentStudentSelectOpen(false), 150)}
+                            className="w-full px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none pr-7"
+                          />
+                          {paymentSelectedStudentId > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPaymentStudentSelectSearch("");
+                                setPaymentSelectedStudentId(0);
+                                setPaymentForm({ ...paymentForm, fee_due_id: 0, amount_paid: 0 });
+                              }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                        {paymentStudentSelectOpen && (
+                          <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                            {students
+                              .filter(s => s.is_active !== false && openDues.some(d => d.student_id === s.id))
+                              .filter(s => {
+                                const q = paymentStudentSelectSearch.toLowerCase().trim();
+                                if (!q) return true;
+                                return s.student_name.toLowerCase().includes(q) || s.admission_number.toLowerCase().includes(q);
+                              }).length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-muted-foreground">No students found</div>
+                              ) : (
+                                students
+                                  .filter(s => s.is_active !== false && openDues.some(d => d.student_id === s.id))
+                                  .filter(s => {
+                                    const q = paymentStudentSelectSearch.toLowerCase().trim();
+                                    if (!q) return true;
+                                    return s.student_name.toLowerCase().includes(q) || s.admission_number.toLowerCase().includes(q);
+                                  })
+                                  .map(s => (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      onMouseDown={() => {
+                                        setPaymentSelectedStudentId(s.id);
+                                        setPaymentForm({ ...paymentForm, fee_due_id: 0, amount_paid: 0 });
+                                        setPaymentStudentSelectSearch(`${s.student_name} [${s.admission_number}]`);
+                                        setPaymentStudentSelectOpen(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors flex items-center justify-between ${paymentSelectedStudentId === s.id ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                    >
+                                      <span>{s.student_name} <span className="text-muted-foreground font-normal">[{s.admission_number}]</span></span>
+                                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground ml-2 shrink-0">{s.class_name}</span>
+                                    </button>
+                                  ))
+                              )}
+                          </div>
+                        )}
                       </div>
 
                       {paymentSelectedStudentId > 0 && (
@@ -4390,6 +4595,9 @@ export default function AdminDashboard() {
 
                           {(() => {
                             const filteredPayments = payments.filter((p) => {
+                              if (p.status === "pending") {
+                                return false;
+                              }
                               if (hideFailedPayments && p.status === "failed") {
                                 return false;
                               }
@@ -4546,7 +4754,7 @@ export default function AdminDashboard() {
                         <input
                           type="text"
                           value={transitionSearchQuery}
-                          onChange={(e) => setTransitionSearchQuery(e.target.value)}
+                          onChange={(e) => { setTransitionSearchQuery(e.target.value); setTransitionsPage(1); }}
                           className="w-full pl-10 pr-4 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
                           placeholder="Search student or admission number..."
                         />
@@ -4554,7 +4762,7 @@ export default function AdminDashboard() {
                       {/* Class Filter */}
                       <select
                         value={transitionClassFilter}
-                        onChange={(e) => setTransitionClassFilter(e.target.value)}
+                        onChange={(e) => { setTransitionClassFilter(e.target.value); setTransitionsPage(1); }}
                         className="px-3 py-2 rounded-xl bg-muted border-0 text-xs focus:ring-2 focus:ring-ring outline-none"
                       >
                         <option value="All">All Current Classes</option>
@@ -4608,17 +4816,18 @@ export default function AdminDashboard() {
                           <th className="pb-3 w-12">
                             <input
                               type="checkbox"
-                              checked={
-                                transitionVisibleActiveStudents.length > 0 &&
-                                transitionVisibleActiveStudents.every(s => selectedTransitionStudentIds.includes(s.id))
-                              }
+                              checked={(() => {
+                                const paginated = transitionFilteredStudents.slice((transitionsPage - 1) * 10, transitionsPage * 10);
+                                const pageActive = paginated.filter(s => s.is_active !== false);
+                                return pageActive.length > 0 && pageActive.every(s => selectedTransitionStudentIds.includes(s.id));
+                              })()}
                               onChange={(e) => {
+                                const paginated = transitionFilteredStudents.slice((transitionsPage - 1) * 10, transitionsPage * 10);
+                                const pageActiveIds = paginated.filter(s => s.is_active !== false).map(s => s.id);
                                 if (e.target.checked) {
-                                  const visibleActiveIds = transitionVisibleActiveStudents.map(s => s.id);
-                                  setSelectedTransitionStudentIds(prev => Array.from(new Set([...prev, ...visibleActiveIds])));
+                                  setSelectedTransitionStudentIds(prev => Array.from(new Set([...prev, ...pageActiveIds])));
                                 } else {
-                                  const visibleActiveIds = transitionVisibleActiveStudents.map(s => s.id);
-                                  setSelectedTransitionStudentIds(prev => prev.filter(id => !visibleActiveIds.includes(id)));
+                                  setSelectedTransitionStudentIds(prev => prev.filter(id => !pageActiveIds.includes(id)));
                                 }
                               }}
                               className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
@@ -4634,9 +4843,9 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody>
                         {(() => {
-                          const list = transitionFilteredStudents;
+                          const paginatedTransitions = transitionFilteredStudents.slice((transitionsPage - 1) * 10, transitionsPage * 10);
 
-                          if (list.length === 0) {
+                          if (paginatedTransitions.length === 0) {
                             return (
                               <tr>
                                 <td colSpan={7} className="py-8 text-center text-muted-foreground">
@@ -4646,7 +4855,7 @@ export default function AdminDashboard() {
                             );
                           }
 
-                          return list.map((student) => {
+                          return paginatedTransitions.map((student) => {
                             const isSelected = selectedTransitionStudentIds.includes(student.id);
                             const isGraduated = student.is_active === false;
                             return (
@@ -4741,6 +4950,37 @@ export default function AdminDashboard() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Pagination controls for transitions */}
+                  {(() => {
+                    const totalTransitionsPages = Math.ceil(transitionFilteredStudents.length / 10) || 1;
+                    if (totalTransitionsPages <= 1) return null;
+                    return (
+                      <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs font-sans">
+                        <span className="text-muted-foreground">
+                          Showing {Math.min(transitionFilteredStudents.length, (transitionsPage - 1) * 10 + 1)}-{Math.min(transitionFilteredStudents.length, transitionsPage * 10)} of {transitionFilteredStudents.length} students
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setTransitionsPage(prev => Math.max(prev - 1, 1))}
+                            disabled={transitionsPage === 1}
+                            className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTransitionsPage(prev => Math.min(prev + 1, totalTransitionsPages))}
+                            disabled={transitionsPage === totalTransitionsPages}
+                            className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Modals inside transitions block */}
@@ -5057,6 +5297,18 @@ export default function AdminDashboard() {
                   })()}
                 </div>
 
+                {/* 2.5 Student Remarks */}
+                {(selectedStudentForView as any).remarks && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <FileText size={14} className="text-primary" /> Student Remarks / Notes
+                    </h4>
+                    <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl text-xs md:text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                      {(selectedStudentForView as any).remarks}
+                    </div>
+                  </div>
+                )}
+
                 {/* 3. Subscribed Accounts/Plans */}
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
@@ -5136,71 +5388,105 @@ export default function AdminDashboard() {
                               </tr>
                             </thead>
                             <tbody>
-                              {studentDues.map((due) => {
-                                const duePayments = payments.filter((p) => p.fee_due_id === due.id && p.status === "success");
+                              {(() => {
+                                const paginatedDues = studentDues.slice((studentLedgerPage - 1) * 10, studentLedgerPage * 10);
+                                return paginatedDues.map((due) => {
+                                  const duePayments = payments.filter((p) => p.fee_due_id === due.id && p.status === "success");
 
-                                return (
-                                  <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
-                                    <td className="py-3 px-4">
-                                      {(() => {
-                                        const parts = due.due_title.split(" (");
-                                        const mainTitle = parts[0];
-                                        const yearPart = parts[1] ? "(" + parts[1] : "";
-                                        return (
-                                          <>
-                                            <p className="font-semibold text-foreground" title={due.due_title}>{mainTitle}</p>
-                                            {yearPart && <p className="text-[10px] text-muted-foreground mt-0.5">{yearPart}</p>}
-                                          </>
-                                        );
-                                      })()}
-                                      {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[220px]" title={due.remarks}>{due.remarks}</p>}
-                                    </td>
-                                    <td className="py-3 px-3 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{formatDate(due.due_date)}</td>
-                                    <td className="py-3 px-3 font-semibold text-foreground">
-                                      <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
-                                      {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0 || parseFloat(due.resource_fee || "0") > 0) && (
-                                        <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
-                                          ₹{parseFloat(due.tuition_fee).toLocaleString()} tuition
-                                          {parseFloat(due.resource_fee || "0") > 0 && ` + ₹${parseFloat(due.resource_fee).toLocaleString()} resource`}
-                                          {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
-                                          {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td className="py-3 px-3 text-emerald-600 font-medium">
-                                      <div className="flex items-center gap-1.5">
-                                        <span>₹{parseFloat(due.paid_amount).toLocaleString()}</span>
-                                        {duePayments.length > 0 && (
-                                          <button
-                                            type="button"
-                                            onClick={() => setSelectedDueForReceiptDetails(due)}
-                                            className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
-                                            title="View payment breakdown & download receipt"
-                                          >
-                                            <Eye size={12} />
-                                          </button>
+                                  return (
+                                    <tr key={due.id} className="border-b border-border/40 last:border-0 hover:bg-muted/10 transition-colors">
+                                      <td className="py-3 px-4">
+                                        {(() => {
+                                          const parts = due.due_title.split(" (");
+                                          const mainTitle = parts[0];
+                                          const yearPart = parts[1] ? "(" + parts[1] : "";
+                                          return (
+                                            <>
+                                              <p className="font-semibold text-foreground" title={due.due_title}>{mainTitle}</p>
+                                              {yearPart && <p className="text-[10px] text-muted-foreground mt-0.5">{yearPart}</p>}
+                                            </>
+                                          );
+                                        })()}
+                                        {due.remarks && <p className="text-[9px] text-muted-foreground italic truncate max-w-[220px]" title={due.remarks}>{due.remarks}</p>}
+                                      </td>
+                                      <td className="py-3 px-3 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{formatDate(due.due_date)}</td>
+                                      <td className="py-3 px-3 font-semibold text-foreground">
+                                        <div>₹{parseFloat(due.final_amount).toLocaleString()}</div>
+                                        {(parseFloat(due.discount_applied) > 0 || parseFloat(due.admission_fee || "0") > 0 || parseFloat(due.resource_fee || "0") > 0) && (
+                                          <div className="text-[9px] text-muted-foreground mt-0.5 normal-case font-normal">
+                                            ₹{parseFloat(due.tuition_fee).toLocaleString()} tuition
+                                            {parseFloat(due.resource_fee || "0") > 0 && ` + ₹${parseFloat(due.resource_fee).toLocaleString()} resource`}
+                                            {parseFloat(due.admission_fee || "0") > 0 && ` + ₹${parseFloat(due.admission_fee).toLocaleString()} adm`}
+                                            {parseFloat(due.discount_applied) > 0 && ` - ₹${parseFloat(due.discount_applied).toLocaleString()} disc`}
+                                          </div>
                                         )}
-                                      </div>
-                                    </td>
-                                    <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
-                                    <td className="py-3 px-3 text-right pr-4">
-                                      <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${due.status === "paid"
-                                        ? "bg-emerald-500/10 text-emerald-700"
-                                        : due.status === "partial"
-                                          ? "bg-amber-500/10 text-amber-700"
-                                          : due.status === "overdue"
-                                            ? "bg-rose-500/10 text-rose-700"
-                                            : "bg-blue-500/10 text-blue-700"
-                                        }`}>
-                                        {due.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
+                                      </td>
+                                      <td className="py-3 px-3 text-emerald-600 font-medium">
+                                        <div className="flex items-center gap-1.5">
+                                          <span>₹{parseFloat(due.paid_amount).toLocaleString()}</span>
+                                          {duePayments.length > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => setSelectedDueForReceiptDetails(due)}
+                                              className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-muted/80 transition-all"
+                                              title="View payment breakdown & download receipt"
+                                            >
+                                              <Eye size={12} />
+                                            </button>
+                                          )}
+                                        </div>
+                                      </td>
+                                      <td className="py-3 px-3 font-semibold text-primary">₹{parseFloat(due.balance).toLocaleString()}</td>
+                                      <td className="py-3 px-3 text-right pr-4">
+                                        <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${due.status === "paid"
+                                          ? "bg-emerald-500/10 text-emerald-700"
+                                          : due.status === "partial"
+                                            ? "bg-amber-500/10 text-amber-700"
+                                            : due.status === "overdue"
+                                              ? "bg-rose-500/10 text-rose-700"
+                                              : "bg-blue-500/10 text-blue-700"
+                                          }`}>
+                                          {due.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
+                              })()}
                             </tbody>
                           </table>
                         </div>
+
+                        {/* Ledger Pagination Controls */}
+                        {(() => {
+                          const totalLedgerPages = Math.ceil(studentDues.length / 10) || 1;
+                          if (totalLedgerPages <= 1) return null;
+                          return (
+                            <div className="flex items-center justify-between border-t border-border pt-3 mt-1 text-xs">
+                              <span className="text-muted-foreground">
+                                Showing {Math.min(studentDues.length, (studentLedgerPage - 1) * 10 + 1)}-{Math.min(studentDues.length, studentLedgerPage * 10)} of {studentDues.length} entries
+                              </span>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setStudentLedgerPage(prev => Math.max(prev - 1, 1))}
+                                  disabled={studentLedgerPage === 1}
+                                  className="px-2.5 py-1 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                                >
+                                  Prev
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setStudentLedgerPage(prev => Math.min(prev + 1, totalLedgerPages))}
+                                  disabled={studentLedgerPage === totalLedgerPages}
+                                  className="px-2.5 py-1 rounded-lg border border-border bg-card text-foreground hover:bg-muted/80 disabled:opacity-50 disabled:hover:bg-card transition-all font-semibold"
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })()}
@@ -5673,12 +5959,14 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Header */}
-                <div className="bg-gradient-to-r from-emerald-500/10 to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                    <CheckCircle size={24} />
+                <div className={`bg-gradient-to-r ${p.status === "success" ? "from-emerald-500/10" : p.status === "pending" ? "from-amber-500/10" : "from-rose-500/10"} to-primary/5 p-6 border-b border-border flex items-center gap-4 rounded-t-[22px]`}>
+                  <div className={`w-12 h-12 rounded-2xl ${p.status === "success" ? "bg-emerald-500/10 text-emerald-600" : p.status === "pending" ? "bg-amber-500/10 text-amber-600" : "bg-rose-500/10 text-rose-600"} flex items-center justify-center`}>
+                    {p.status === "success" ? <CheckCircle size={24} /> : p.status === "pending" ? <Clock size={24} /> : <AlertCircle size={24} />}
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-foreground">Transaction Details</h3>
+                    <h3 className="text-base font-bold text-foreground">
+                      {p.status === "success" ? "Transaction Details" : p.status === "pending" ? "Pending Transaction Details" : "Failed Transaction Details"}
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono">Receipt: AMH-REC-{p.id}</p>
                   </div>
                 </div>
@@ -5745,7 +6033,7 @@ export default function AdminDashboard() {
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Transaction Settlement Allocation</h4>
                     <div className="space-y-2.5 bg-card border border-border/50 p-4 rounded-2xl">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tuition Cleared (This payment):</span>
+                        <span className="text-muted-foreground">{p.status === "success" ? "Tuition Cleared (This payment):" : "Tuition to Clear (Pending):"}</span>
                         <span className="font-semibold text-foreground">₹{base.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       </div>
                       {charges > 0 && (
@@ -5761,12 +6049,12 @@ export default function AdminDashboard() {
                         </>
                       )}
                       <div className="flex justify-between border-t border-border/60 pt-2.5 font-bold text-primary text-sm mt-1">
-                        <span>Actual Amount Paid:</span>
+                        <span>{p.status === "success" ? "Actual Amount Paid:" : "Amount to be Paid:"}</span>
                         <span>₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
                         <span>Method: <strong className="uppercase">{p.payment_mode.replace("_", " ")}</strong></span>
-                        <span>Gateway ID: <strong className="font-mono">{p.gateway_payment_id || "Desk Receipt"}</strong></span>
+                        <span>Gateway ID: <strong className="font-mono">{p.gateway_payment_id || (p.payment_mode === "online_gateway" ? "Pending Gateway Checkout" : "Desk Receipt")}</strong></span>
                       </div>
                       {p.remarks && (
                         <div className="text-[10px] text-muted-foreground bg-muted/40 p-2 rounded-lg italic">
@@ -5779,13 +6067,19 @@ export default function AdminDashboard() {
 
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-border bg-muted/20 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => handlePrintReceipt(p)}
-                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-all"
-                  >
-                    Download Printable Receipt
-                  </button>
+                  {p.status === "success" ? (
+                    <button
+                      type="button"
+                      onClick={() => handlePrintReceipt(p)}
+                      className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-all"
+                    >
+                      Download Printable Receipt
+                    </button>
+                  ) : (
+                    <span className="text-xs text-amber-600 font-semibold flex items-center gap-1">
+                      <Clock size={12} /> Printable receipt only available after success
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setSelectedPaymentForDetails(null)}

@@ -54,6 +54,7 @@ export interface Student {
   joining_date: string;
   parent_id: string;
   is_active: boolean;
+  remarks?: string;
 }
 
 export interface StudentCreate {
@@ -65,6 +66,7 @@ export interface StudentCreate {
   joining_date: string;
   parent_id: string;
   is_active: boolean;
+  remarks?: string;
 }
 
 export interface StudentUpdate {
@@ -75,6 +77,7 @@ export interface StudentUpdate {
   academic_year?: string;
   joining_date?: string;
   parent_id?: string;
+  remarks?: string | null;
 }
 
 export interface StudentResponse {
@@ -87,6 +90,7 @@ export interface StudentResponse {
   joining_date: string;
   parent_id: string;
   is_active: boolean;
+  remarks?: string;
   created_at: string;
   updated_at: string;
 }
