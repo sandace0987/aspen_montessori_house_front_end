@@ -9,6 +9,7 @@ import {
   Download,
   LogOut,
   User,
+  Users,
   Calendar,
   BookOpen,
   AlertCircle,
@@ -20,7 +21,9 @@ import {
   ShieldCheck,
   TrendingDown,
   Lock,
-  X
+  X,
+  TreePine,
+  Star
 } from "lucide-react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Footer from "@/components/Footer";
@@ -868,7 +871,9 @@ export default function ParentLogin() {
 
           {confirmingPaymentDue && (() => {
             const balanceVal = parseFloat(confirmingPaymentDue.balance);
-            const gatewayCharges = balanceVal * 0.02;
+            const surchargePct = parseFloat(import.meta.env.VITE_ONLINE_PAYMENT_SURCHARGE_PCT || "2.4");
+            const totalSurcharge = balanceVal * (surchargePct / 100);
+            const gatewayCharges = totalSurcharge / 1.18;
             const gatewayChargesGst = gatewayCharges * 0.18;
             const totalAmount = balanceVal + gatewayCharges + gatewayChargesGst;
 
@@ -1025,59 +1030,116 @@ export default function ParentLogin() {
               </div>
             )}
 
-            {/* Upcoming Important Dates */}
+            {/* ── Newsletter Card ────────────────────────────────────────────── */}
             <motion.div
               {...fadeUp}
-              className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden mt-6"
+              className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm mt-6"
             >
-              <div className="absolute top-0 left-0 w-24 h-24 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-                <Calendar size={16} className="text-primary" /> Upcoming Important Dates
-              </h3>
-              {upcomingEvents.length === 0 ? (
-                <div className="py-6 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
-                  <p className="text-xs font-semibold text-foreground">Stay tuned for updates!</p>
-                  <p className="text-[10px] text-muted-foreground/80">Check back later for school calendar and event details.</p>
+              {/* Gradient header */}
+              <div className="relative bg-gradient-to-br from-amber-600/90 to-primary/80 px-6 py-6 md:px-8 md:py-8 overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-black/10 blur-2xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 mb-1">Monthly Newsletter</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">The Aspen Leaf</h2>
+                    <div className="flex items-center gap-2 mt-2 text-white/80 text-xs">
+                      <Calendar size={12} />
+                      <span>March 2026 &middot; Published March 15, 2026</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/parent/newsletter"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-semibold rounded-full transition-all backdrop-blur-sm shrink-0"
+                  >
+                    <BookOpen size={13} />
+                    Read Full Edition
+                    <ChevronRight size={13} />
+                  </Link>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {upcomingEvents.map((event, idx) => {
-                    const { day, month } = formatEventDate(event.date);
-                    // Alternating theme classes (Green vs Warm Brown/Amber)
-                    const isGreen = idx % 2 === 0;
-                    const containerClass = isGreen
-                      ? "bg-emerald-500/[0.02] border-emerald-500/10 hover:bg-emerald-500/[0.06] hover:border-emerald-500/20"
-                      : "bg-amber-600/[0.02] border-amber-600/10 hover:bg-amber-600/[0.06] hover:border-amber-600/20";
-                    const badgeClass = isGreen
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-amber-600/10 border-amber-600/20 text-amber-700 dark:text-amber-400";
-                    const monthTextClass = isGreen
-                      ? "text-emerald-700 dark:text-emerald-400"
-                      : "text-amber-700 dark:text-amber-400";
+              </div>
 
-                    return (
-                      <div
-                        key={idx}
-                        className={`flex gap-3.5 items-center p-3 rounded-2xl border transition-all duration-300 shadow-sm ${containerClass}`}
-                      >
-                        <div className={`w-11 h-11 shrink-0 rounded-xl border flex flex-col items-center justify-center text-center shadow-inner ${badgeClass}`}>
-                          <span className={`text-[9px] font-bold uppercase leading-none tracking-wider ${monthTextClass}`}>{month}</span>
-                          <span className="text-base font-extrabold text-foreground leading-none mt-0.5">{day}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-bold text-foreground truncate" title={event.title}>{event.title}</h4>
-                          <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
-                            📅 {new Date(event.date).toLocaleDateString("en-IN", { weekday: 'short', day: 'numeric', month: 'short' })}
-                          </span>
-                        </div>
+              <div className="p-6 grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {/* Articles column */}
+                <div className="sm:col-span-2 md:col-span-2 space-y-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">This Month's Highlights</p>
+                  {[
+                    {
+                      icon: TreePine,
+                      title: "Hands-on Learning in the Environment",
+                      preview: "Children engaging in practical life activities like sieving, developing fine motor skills, concentration, and independence.",
+                      color: "text-emerald-600 bg-emerald-500/10",
+                    },
+                    {
+                      icon: BookOpen,
+                      title: "Language & Arithmetic in Action",
+                      preview: "Exploring sounds with Moveable Alphabet and building number sense through hands-on tools like Number Rods.",
+                      color: "text-blue-600 bg-blue-500/10",
+                    },
+                    {
+                      icon: Users,
+                      title: "Toddler Learning Highlights",
+                      preview: "Building vocabulary and exploring shapes through transport-themed play — blending movement with joyful learning.",
+                      color: "text-violet-600 bg-violet-500/10",
+                    },
+                    {
+                      icon: Star,
+                      title: "Celebrations & Cultural Learning",
+                      preview: "Vibrant Sankranthi kites, rangoli, and Republic Day activities — culture, community, and values in action.",
+                      color: "text-amber-600 bg-amber-500/10",
+                    },
+                  ].map((article) => (
+                    <div key={article.title} className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/40 hover:bg-muted/70 transition-colors">
+                      <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${article.color}`}>
+                        <article.icon size={15} />
                       </div>
-                    );
-                  })}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground leading-snug">{article.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{article.preview}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+
+                {/* Upcoming events sidebar */}
+                <div className="sm:col-span-2 md:col-span-1 space-y-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Upcoming Events</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { date: "Apr 13", event: "Summer Camp Begins" },
+                      { date: "Apr 22", event: "Earth Day Celebration" },
+                      { date: "Apr 26", event: "Parent-Teacher Meeting" },
+                      { date: "2nd Sunday, May", event: "Mother's Day Celebration" },
+                    ].map((evt, i) => (
+                      <div
+                        key={evt.event}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+                          i % 2 === 0
+                            ? "bg-amber-500/[0.04] border-amber-500/15 hover:bg-amber-500/[0.08]"
+                            : "bg-primary/[0.04] border-primary/15 hover:bg-primary/[0.08]"
+                        }`}
+                      >
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg text-center min-w-[50px] ${
+                          i % 2 === 0 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "bg-primary/10 text-primary"
+                        }`}>
+                          {evt.date}
+                        </span>
+                        <span className="text-xs text-foreground font-medium leading-snug">{evt.event}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    to="/parent/newsletter"
+                    className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-2xl border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/5 transition-all"
+                  >
+                    View Full Newsletter
+                    <ChevronRight size={13} />
+                  </Link>
+                </div>
+              </div>
             </motion.div>
           </div>
+
 
           {/* Fee stats outstanding summary */}
           <div className="space-y-6">
@@ -1292,7 +1354,6 @@ export default function ParentLogin() {
             </div>
           )}
         </div>
-
         {/* Historical Payments Table */}
         <motion.div {...fadeUp} className="bg-card border border-border rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border/80">

@@ -22,9 +22,6 @@ const playChime = (type: "open" | "close") => {
 };
 
 export default function ChatBot() {
-  const isExcluded = typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
-  if (isExcluded) return null;
-
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{ type: "bot", content: WELCOME }]);
   const [showQuestions, setShowQuestions] = useState(true);

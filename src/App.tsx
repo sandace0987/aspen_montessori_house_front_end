@@ -16,6 +16,7 @@ import { Analytics } from "@vercel/analytics/react";
 const ParentLogin = lazy(() => import("./pages/ParentLogin.tsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.tsx"));
 const Newsletter = lazy(() => import("./pages/Newsletter.tsx"));
+const ParentNewsletter = lazy(() => import("./pages/ParentNewsletter.tsx"));
 const Gallery = lazy(() => import("./pages/Gallery.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
 const Programs = lazy(() => import("./pages/Programs.tsx"));
@@ -25,6 +26,7 @@ const TermsConditions = lazy(() => import("./pages/TermsConditions.tsx"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy.tsx"));
 const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy.tsx"));
 const ContactUs = lazy(() => import("./pages/ContactUs.tsx"));
+
 
 // Defer chatbot & scroll-to-top
 const ChatBot = lazy(() => import("./components/ChatBot.tsx"));
@@ -152,7 +154,9 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/parent" element={<ParentLogin />} />
                   <Route path="/parent/token" element={<ParentLogin />} />
+                  <Route path="/parent/newsletter" element={<ParentNewsletter />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+
                   <Route path="/admin/token" element={<AdminDashboard />} />
                   <Route path="/newsletter" element={<Newsletter />} />
                   <Route path="/gallery" element={<Gallery />} />

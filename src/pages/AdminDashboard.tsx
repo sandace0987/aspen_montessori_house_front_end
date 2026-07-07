@@ -45,7 +45,8 @@ import {
   Tag,
   PlusCircle,
   ArrowRightLeft,
-  FileText
+  FileText,
+  FileSpreadsheet
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/context/AuthContext";
@@ -64,6 +65,17 @@ import {
 import aspenLogo from "@/assets/aspen-logo.png";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import ComingSoonPage from "@/components/ComingSoonPage";
+import ReportModal from "@/components/ReportModal";
+import {
+  downloadStudentsReport,
+  downloadParentsReport,
+  downloadFeeReport,
+  downloadPaymentsReport,
+  type StudentsReportFilters,
+  type ParentsReportFilters,
+  type FeeReportFilters,
+  type PaymentsReportFilters,
+} from "@/utils/reportUtils";
 import { toast } from "sonner";
 
 type TabType = "dashboard" | "admins" | "students" | "parents" | "plans" | "accounts" | "dues" | "payments" | "transitions";
@@ -86,6 +98,11 @@ export default function AdminDashboard() {
   // Navigation and layout states
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  // Report modal states
+  const [studentsReportOpen, setStudentsReportOpen] = useState(false);
+  const [parentsReportOpen, setParentsReportOpen] = useState(false);
+  const [feeReportOpen, setFeeReportOpen] = useState(false);
+  const [paymentsReportOpen, setPaymentsReportOpen] = useState(false);
   const [duesPage, setDuesPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [studentsPage, setStudentsPage] = useState(1);
@@ -1847,9 +1864,18 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">Onboard and Manage Students</h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">Register new students and assign discounts</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Onboard and Manage Students</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Register new students and assign discounts</p>
+                  </div>
+                  <button
+                    onClick={() => setStudentsReportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                  >
+                    <FileSpreadsheet size={14} />
+                    Report
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2273,9 +2299,18 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">Parents Directory</h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">Invite, manage and configure parent profiles and their roles</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Parents Directory</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Invite, manage and configure parent profiles and their roles</p>
+                  </div>
+                  <button
+                    onClick={() => setParentsReportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                  >
+                    <FileSpreadsheet size={14} />
+                    Report
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -3439,9 +3474,18 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">Student Fee Account subscriptions</h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">Subscribe target students to active pricing fee plans</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Student Fee Account subscriptions</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Subscribe target students to active pricing fee plans</p>
+                  </div>
+                  <button
+                    onClick={() => setFeeReportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                  >
+                    <FileSpreadsheet size={14} />
+                    Fee Report
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -3983,9 +4027,18 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">Generate installment dues</h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">Compute discounts, resource fees and write open installment dues</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Generate installment dues</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Compute discounts, resource fees and write open installment dues</p>
+                  </div>
+                  <button
+                    onClick={() => setFeeReportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                  >
+                    <FileSpreadsheet size={14} />
+                    Fee Report
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -4397,9 +4450,18 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">Manual Desk Payments collection</h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">Log manual cash, UPI, or bank transfers received directly at the desk</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Manual Desk Payments collection</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Log manual cash, UPI, or bank transfers received directly at the desk</p>
+                  </div>
+                  <button
+                    onClick={() => setPaymentsReportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                  >
+                    <FileSpreadsheet size={14} />
+                    Report
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -6093,6 +6155,259 @@ export default function AdminDashboard() {
           );
         })()}
       </AnimatePresence>
+
+      {/* ── Report Modals ──────────────────────────────────────────────── */}
+
+      {/* Students Report */}
+      <ReportModal
+        isOpen={studentsReportOpen}
+        onClose={() => setStudentsReportOpen(false)}
+        title="Students Report"
+        subtitle="Download student directory as Excel"
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { label: "All Students", value: "all" },
+              { label: "Active Only", value: "active" },
+              { label: "Inactive Only", value: "inactive" },
+            ],
+          },
+          {
+            key: "className",
+            label: "Class",
+            type: "select",
+            options: [
+              { label: "All Classes", value: "" },
+              ...Array.from(new Set(students.map((s) => s.class_name)))
+                .sort()
+                .map((c) => ({ label: c, value: c })),
+            ],
+          },
+          {
+            key: "academicYear",
+            label: "Academic Year",
+            type: "select",
+            options: [
+              { label: "All Years", value: "" },
+              ...Array.from(new Set(students.map((s) => s.academic_year)))
+                .sort()
+                .reverse()
+                .map((y) => ({ label: y, value: y })),
+            ],
+          },
+          {
+            key: "joiningDateRange",
+            label: "Joining Date Range",
+            type: "date-range",
+            fromKey: "joiningFrom",
+            toKey: "joiningTo",
+          },
+        ]}
+        onDownload={(vals) => {
+          downloadStudentsReport(students, {
+            status: (vals.status as StudentsReportFilters["status"]) ?? "all",
+            className: (vals.className as string) ?? "",
+            academicYear: (vals.academicYear as string) ?? "",
+            joiningFrom: (vals.joiningFrom as string) ?? "",
+            joiningTo: (vals.joiningTo as string) ?? "",
+          });
+        }}
+      />
+
+      {/* Parents Report */}
+      <ReportModal
+        isOpen={parentsReportOpen}
+        onClose={() => setParentsReportOpen(false)}
+        title="Parents Report"
+        subtitle="Download parent directory as Excel"
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: [
+              { label: "All Parents", value: "all" },
+              { label: "Active Only", value: "active" },
+              { label: "Inactive Only", value: "inactive" },
+            ],
+          },
+        ]}
+        onDownload={(vals) => {
+          const parentProfiles = profiles.filter((p) =>
+            ((p as any).roles ?? []).includes("parent")
+          );
+          downloadParentsReport(parentProfiles, {
+            status: (vals.status as ParentsReportFilters["status"]) ?? "all",
+          });
+        }}
+      />
+
+      {/* Fee Report (Subscriptions + Installments — 2 sheets) */}
+      <ReportModal
+        isOpen={feeReportOpen}
+        onClose={() => setFeeReportOpen(false)}
+        title="Fee Report"
+        subtitle="Downloads a 2-sheet Excel: Fee Subscriptions + Installments"
+        filters={[
+          {
+            key: "studentId",
+            label: "Student",
+            type: "select",
+            options: [
+              { label: "All Students", value: "" },
+              ...students
+                .slice()
+                .sort((a, b) => a.student_name.localeCompare(b.student_name))
+                .map((s) => ({
+                  label: `${s.student_name} (${s.admission_number})`,
+                  value: String(s.id),
+                })),
+            ],
+          },
+          {
+            key: "className",
+            label: "Class",
+            type: "select",
+            options: [
+              { label: "All Classes", value: "" },
+              ...Array.from(new Set(students.map((s) => s.class_name)))
+                .sort()
+                .map((c) => ({ label: c, value: c })),
+            ],
+          },
+          {
+            key: "academicYear",
+            label: "Academic Year",
+            type: "select",
+            options: [
+              { label: "All Years", value: "" },
+              ...Array.from(new Set(students.map((s) => s.academic_year)))
+                .sort()
+                .reverse()
+                .map((y) => ({ label: y, value: y })),
+            ],
+          },
+          {
+            key: "paymentCycle",
+            label: "Payment Cycle (Sheet 1)",
+            type: "select",
+            options: [
+              { label: "All Cycles", value: "" },
+              { label: "Monthly", value: "monthly" },
+              { label: "Quarterly", value: "quarterly" },
+              { label: "Yearly", value: "yearly" },
+            ],
+          },
+          {
+            key: "subscriptionStatus",
+            label: "Subscription Status (Sheet 1)",
+            type: "select",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Active Only", value: "active" },
+              { label: "Inactive Only", value: "inactive" },
+            ],
+          },
+          {
+            key: "dueStatuses",
+            label: "Due Status (Sheet 2)",
+            type: "multiselect",
+            options: [
+              { label: "Pending", value: "pending" },
+              { label: "Partial", value: "partial" },
+              { label: "Paid", value: "paid" },
+              { label: "Overdue", value: "overdue" },
+            ],
+          },
+          {
+            key: "dueDateRange",
+            label: "Due Date Range (Sheet 2)",
+            type: "date-range",
+            fromKey: "dueDateFrom",
+            toKey: "dueDateTo",
+          },
+        ]}
+        onDownload={(vals) => {
+          downloadFeeReport(feeAccounts, openDues, students, feePlans, {
+            studentId: (vals.studentId as string) ?? "",
+            className: (vals.className as string) ?? "",
+            academicYear: (vals.academicYear as string) ?? "",
+            paymentCycle: (vals.paymentCycle as string) ?? "",
+            subscriptionStatus:
+              (vals.subscriptionStatus as FeeReportFilters["subscriptionStatus"]) ?? "all",
+            dueStatuses: (vals.dueStatuses as FeeReportFilters["dueStatuses"]) ?? [],
+            dueDateFrom: (vals.dueDateFrom as string) ?? "",
+            dueDateTo: (vals.dueDateTo as string) ?? "",
+          });
+        }}
+      />
+
+      {/* Payments Report */}
+      <ReportModal
+        isOpen={paymentsReportOpen}
+        onClose={() => setPaymentsReportOpen(false)}
+        title="Payments Report"
+        subtitle="Download transaction history as Excel"
+        filters={[
+          {
+            key: "studentId",
+            label: "Student",
+            type: "select",
+            options: [
+              { label: "All Students", value: "" },
+              ...students
+                .slice()
+                .sort((a, b) => a.student_name.localeCompare(b.student_name))
+                .map((s) => ({
+                  label: `${s.student_name} (${s.admission_number})`,
+                  value: String(s.id),
+                })),
+            ],
+          },
+          {
+            key: "paymentModes",
+            label: "Payment Mode",
+            type: "multiselect",
+            options: [
+              { label: "Cash", value: "cash" },
+              { label: "UPI", value: "upi" },
+              { label: "Online Gateway", value: "online_gateway" },
+              { label: "Bank Transfer", value: "bank_transfer" },
+            ],
+          },
+          {
+            key: "statuses",
+            label: "Payment Status",
+            type: "multiselect",
+            options: [
+              { label: "Success", value: "success" },
+              { label: "Pending", value: "pending" },
+              { label: "Failed", value: "failed" },
+            ],
+          },
+          {
+            key: "dateRange",
+            label: "Date Range",
+            type: "date-range",
+            fromKey: "dateFrom",
+            toKey: "dateTo",
+          },
+        ]}
+        onDownload={(vals) => {
+          downloadPaymentsReport(payments, students, openDues, {
+            studentId: (vals.studentId as string) ?? "",
+            paymentModes:
+              (vals.paymentModes as PaymentsReportFilters["paymentModes"]) ?? [],
+            statuses:
+              (vals.statuses as PaymentsReportFilters["statuses"]) ?? [],
+            dateFrom: (vals.dateFrom as string) ?? "",
+            dateTo: (vals.dateTo as string) ?? "",
+          });
+        }}
+      />
     </div>
   );
 }

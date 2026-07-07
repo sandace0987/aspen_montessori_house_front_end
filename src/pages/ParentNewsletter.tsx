@@ -1,5 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, Calendar, BookOpen, TreePine, Users, Star } from "lucide-react";
+import { ArrowLeft, Calendar, BookOpen, TreePine, Users, Star, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { usePageMeta } from "@/hooks/use-page-meta";
@@ -43,12 +43,23 @@ const currentNewsletter = {
   ],
 };
 
-export default function Newsletter() {
+export default function ParentNewsletter() {
   const { isAuthenticated, isLoading, roles } = useAuth();
-  usePageMeta("Newsletter – Aspen Montessori Hyderabad", "Stay updated with the latest news, events, and stories from Aspen Montessori Hyderabad.");
+  usePageMeta("Parent Newsletter – Aspen Montessori", undefined, { noindex: true });
 
-  if (!isLoading && isAuthenticated && (roles.includes("parent") || roles.includes("admin"))) {
-    return <Navigate to="/parent/newsletter" replace />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="animate-spin text-primary" size={32} />
+          <p className="text-sm text-muted-foreground animate-pulse">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || (!roles.includes("parent") && !roles.includes("admin"))) {
+    return <Navigate to="/parent" replace />;
   }
 
   return (
@@ -57,15 +68,15 @@ export default function Newsletter() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         {/* Back link */}
         <Link
-          to="/"
+          to="/parent"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
         >
-          <ArrowLeft size={16} /> Back to Home
+          <ArrowLeft size={16} /> Back to Dashboard
         </Link>
 
         {/* Header */}
         <div className="mb-12 text-center">
-          <p className="text-sm font-medium text-primary tracking-widest uppercase mb-2">Monthly Newsletter</p>
+          <p className="text-sm font-medium text-primary tracking-widest uppercase mb-2">Parent Newsletter</p>
           <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-3">{currentNewsletter.title}</h1>
           <div className="inline-flex items-center gap-2 text-muted-foreground text-sm">
             <Calendar size={14} />
