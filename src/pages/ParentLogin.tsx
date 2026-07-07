@@ -971,69 +971,12 @@ export default function ParentLogin() {
         </AnimatePresence>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-          {/* Linked Student profiles */}
+          {/* Left side: Newsletter Card */}
           <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <User size={18} className="text-primary" /> Student Profiles
-            </h2>
-
-            {dataLoading ? (
-              <div className="bg-card rounded-3xl p-12 text-center border border-border flex flex-col items-center justify-center gap-3">
-                <RefreshCw className="animate-spin text-primary" size={24} />
-                <p className="text-sm text-muted-foreground">Synchronizing student records...</p>
-              </div>
-            ) : students.length === 0 ? (
-              <div className="bg-card rounded-3xl p-8 text-center border border-border space-y-3">
-                <p className="text-muted-foreground text-sm">No student profile matches found linked to your email.</p>
-                <p className="text-xs text-muted-foreground">Administrators must bind your parent ID to active student entries.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {students.map((student) => {
-                  const isGraduated = student.is_active === false;
-                  return (
-                    <motion.div
-                      key={student.id}
-                      {...fadeUp}
-                      className={`bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${isGraduated ? "opacity-75 grayscale-[20%]" : ""
-                        }`}
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-                      <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold ${isGraduated ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-                          }`}>
-                          {student.student_name[0]}
-                        </div>
-                        <div className="space-y-2 flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold text-foreground truncate max-w-[130px] sm:max-w-none" title={student.student_name}>
-                              {student.student_name}
-                            </p>
-                            {isGraduated && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
-                                Graduated
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full inline-block font-mono">
-                            Adm: {student.admission_number}
-                          </p>
-                          <div className="space-y-1 pt-2 border-t border-border/80 mt-2 text-xs text-muted-foreground">
-                            <p className="flex items-center gap-1.5"><Calendar size={12} /> Born: {student.date_of_birth}</p>
-                            <p className="flex items-center gap-1.5"><BookOpen size={12} /> Class: {student.class_name}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-
             {/* ── Newsletter Card ────────────────────────────────────────────── */}
             <motion.div
               {...fadeUp}
-              className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm mt-6"
+              className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm h-full flex flex-col justify-between"
             >
               {/* Gradient header */}
               <div className="relative bg-gradient-to-br from-amber-600/90 to-primary/80 px-6 py-6 md:px-8 md:py-8 overflow-hidden">
@@ -1059,7 +1002,7 @@ export default function ParentLogin() {
                 </div>
               </div>
 
-              <div className="p-6 grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="p-6 grid sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1">
                 {/* Articles column */}
                 <div className="sm:col-span-2 md:col-span-2 space-y-4">
                   <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">This Month's Highlights</p>
@@ -1140,43 +1083,105 @@ export default function ParentLogin() {
             </motion.div>
           </div>
 
-
-          {/* Fee stats outstanding summary */}
+          {/* Right side: Student Profile(s) and Fee Account Dues stacked */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <CreditCard size={18} className="text-primary" /> Fee Account Dues
-            </h2>
-            <motion.div
-              {...fadeUp}
-              className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden flex flex-col justify-between"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Outstanding</p>
-                <p className="text-4xl font-semibold text-primary mt-2">₹{parseFloat(totalOutstanding).toLocaleString("en-IN")}</p>
-                <p className="text-xs text-muted-foreground mt-2">Aggregated balance of all open term dues</p>
-              </div>
+            {/* Student Profiles */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <User size={18} className="text-primary" /> Student Profiles
+              </h2>
 
-              <div className="border-t border-border/80 my-5 pt-4 space-y-2.5">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Number of pending terms:</span>
-                  <span className="font-semibold text-foreground">
-                    {dues.filter(d => d.status !== "paid").length} installment(s)
-                  </span>
+              {dataLoading ? (
+                <div className="bg-card rounded-3xl p-12 text-center border border-border flex flex-col items-center justify-center gap-3">
+                  <RefreshCw className="animate-spin text-primary" size={24} />
+                  <p className="text-sm text-muted-foreground">Synchronizing student records...</p>
                 </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Secure processor:</span>
-                  <span className="font-semibold text-foreground flex items-center gap-1">
-                    Razorpay Gateway
-                  </span>
+              ) : students.length === 0 ? (
+                <div className="bg-card rounded-3xl p-8 text-center border border-border space-y-3">
+                  <p className="text-muted-foreground text-sm">No student profile matches found linked to your email.</p>
+                  <p className="text-xs text-muted-foreground">Administrators must bind your parent ID to active student entries.</p>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6">
+                  {students.map((student) => {
+                    const isGraduated = student.is_active === false;
+                    return (
+                      <motion.div
+                        key={student.id}
+                        {...fadeUp}
+                        className={`bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${isGraduated ? "opacity-75 grayscale-[20%]" : ""
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+                        <div className="flex items-start gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold ${isGraduated ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                            }`}>
+                            {student.student_name[0]}
+                          </div>
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-foreground truncate max-w-[130px] sm:max-w-none" title={student.student_name}>
+                                {student.student_name}
+                              </p>
+                              {isGraduated && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+                                  Graduated
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full inline-block font-mono">
+                              Adm: {student.admission_number}
+                            </p>
+                            <div className="space-y-1 pt-2 border-t border-border/80 mt-2 text-xs text-muted-foreground">
+                              <p className="flex items-center gap-1.5"><Calendar size={12} /> Born: {student.date_of_birth}</p>
+                              <p className="flex items-center gap-1.5"><BookOpen size={12} /> Class: {student.class_name}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-              <div className="p-3 bg-muted rounded-2xl flex items-start gap-2.5 text-xs text-muted-foreground">
-                <AlertCircle className="shrink-0 text-primary mt-0.5" size={14} />
-                <p>Transactions are processed via high-grade TLS encryption directly to Razorpay servers. Dues reconciliation is immediate.</p>
-              </div>
-            </motion.div>
+            {/* Fee stats outstanding summary */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <CreditCard size={18} className="text-primary" /> Fee Account Dues
+              </h2>
+              <motion.div
+                {...fadeUp}
+                className="bg-card border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden flex flex-col justify-between"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Outstanding</p>
+                  <p className="text-4xl font-semibold text-primary mt-2">₹{parseFloat(totalOutstanding).toLocaleString("en-IN")}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Aggregated balance of all open term dues</p>
+                </div>
+
+                <div className="border-t border-border/80 my-5 pt-4 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Number of pending terms:</span>
+                    <span className="font-semibold text-foreground">
+                      {dues.filter(d => d.status !== "paid").length} installment(s)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Secure processor:</span>
+                    <span className="font-semibold text-foreground flex items-center gap-1">
+                      Razorpay Gateway
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted rounded-2xl flex items-start gap-2.5 text-xs text-muted-foreground">
+                  <AlertCircle className="shrink-0 text-primary mt-0.5" size={14} />
+                  <p>Transactions are processed via high-grade TLS encryption directly to Razorpay servers. Dues reconciliation is immediate.</p>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
 

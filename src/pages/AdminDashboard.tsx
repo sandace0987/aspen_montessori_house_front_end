@@ -1871,7 +1871,7 @@ export default function AdminDashboard() {
                   </div>
                   <button
                     onClick={() => setStudentsReportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-all shrink-0 shadow-sm hover:shadow-md"
                   >
                     <FileSpreadsheet size={14} />
                     Report
@@ -2306,7 +2306,7 @@ export default function AdminDashboard() {
                   </div>
                   <button
                     onClick={() => setParentsReportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-all shrink-0 shadow-sm hover:shadow-md"
                   >
                     <FileSpreadsheet size={14} />
                     Report
@@ -3481,7 +3481,7 @@ export default function AdminDashboard() {
                   </div>
                   <button
                     onClick={() => setFeeReportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-all shrink-0 shadow-sm hover:shadow-md"
                   >
                     <FileSpreadsheet size={14} />
                     Fee Report
@@ -4034,7 +4034,7 @@ export default function AdminDashboard() {
                   </div>
                   <button
                     onClick={() => setFeeReportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-all shrink-0 shadow-sm hover:shadow-md"
                   >
                     <FileSpreadsheet size={14} />
                     Fee Report
@@ -4457,7 +4457,7 @@ export default function AdminDashboard() {
                   </div>
                   <button
                     onClick={() => setPaymentsReportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-all shrink-0 shadow-sm hover:shadow-md"
                   >
                     <FileSpreadsheet size={14} />
                     Report
