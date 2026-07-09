@@ -74,9 +74,9 @@ export default function Newsletter() {
         </div>
 
         {/* Articles */}
-        <div className="space-y-8 mb-16">
+        <div className="space-y-8 mb-12">
           {currentNewsletter.articles.map((article) => (
-            <article key={article.title} className="bg-card rounded-2xl p-6 md:p-8 border border-border">
+            <article key={article.title} className="bg-card rounded-2xl p-6 md:p-8 border border-border shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                   <article.icon size={20} />

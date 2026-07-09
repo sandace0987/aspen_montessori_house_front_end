@@ -988,7 +988,7 @@ export default function ParentLogin() {
                     <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">The Aspen Leaf</h2>
                     <div className="flex items-center gap-2 mt-2 text-white/80 text-xs">
                       <Calendar size={12} />
-                      <span>March 2026 &middot; Published March 15, 2026</span>
+                      <span>July 2026 &middot; Published July 10, 2026</span>
                     </div>
                   </div>
                   <Link
@@ -1008,28 +1008,28 @@ export default function ParentLogin() {
                   <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">This Month's Highlights</p>
                   {[
                     {
-                      icon: TreePine,
-                      title: "Hands-on Learning in the Environment",
-                      preview: "Children engaging in practical life activities like sieving, developing fine motor skills, concentration, and independence.",
-                      color: "text-emerald-600 bg-emerald-500/10",
-                    },
-                    {
-                      icon: BookOpen,
-                      title: "Language & Arithmetic in Action",
-                      preview: "Exploring sounds with Moveable Alphabet and building number sense through hands-on tools like Number Rods.",
-                      color: "text-blue-600 bg-blue-500/10",
+                      icon: Star,
+                      title: "Welcome Back children!",
+                      preview: "The long summer break is over, and we're thrilled to welcome Aspenities back to a new year filled with learning, fun, friendship, and new adventures.",
+                      color: "text-amber-600 bg-amber-500/10",
                     },
                     {
                       icon: Users,
-                      title: "Toddler Learning Highlights",
-                      preview: "Building vocabulary and exploring shapes through transport-themed play — blending movement with joyful learning.",
+                      title: "Father's Day & Yoga Day",
+                      preview: "Handmade gifts and father-child games celebrated our super-dads. International Yoga Day highlighted well-being and planetary health.",
                       color: "text-violet-600 bg-violet-500/10",
                     },
                     {
-                      icon: Star,
-                      title: "Celebrations & Cultural Learning",
-                      preview: "Vibrant Sankranthi kites, rangoli, and Republic Day activities — culture, community, and values in action.",
-                      color: "text-amber-600 bg-amber-500/10",
+                      icon: BookOpen,
+                      title: "Second Shift Implementation",
+                      preview: "Introducing a second shift (11:30 AM – 3:00 PM) for Mont-1 and Mont-2 children. Limited seats available on a first-come, first-served basis.",
+                      color: "text-blue-600 bg-blue-500/10",
+                    },
+                    {
+                      icon: TreePine,
+                      title: "Our Website Just Got Better!",
+                      preview: "Launched our enhanced website with a secure Parent Login Portal for quick fee payments. You are currently on it!",
+                      color: "text-emerald-600 bg-emerald-500/10",
                     },
                   ].map((article) => (
                     <div key={article.title} className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/40 hover:bg-muted/70 transition-colors">
@@ -1049,10 +1049,7 @@ export default function ParentLogin() {
                   <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Upcoming Events</p>
                   <div className="space-y-2.5">
                     {[
-                      { date: "Apr 13", event: "Summer Camp Begins" },
-                      { date: "Apr 22", event: "Earth Day Celebration" },
-                      { date: "Apr 26", event: "Parent-Teacher Meeting" },
-                      { date: "2nd Sunday, May", event: "Mother's Day Celebration" },
+                      { date: "Jul 24", event: "Show & Tell Activity (Attire: BLUE)" },
                     ].map((evt, i) => (
                       <div
                         key={evt.event}
